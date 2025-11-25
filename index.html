@@ -1,3 +1,4 @@
+updated code 
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -191,6 +192,128 @@
         /* Daily Entry View */
         .daily-view {
             padding: 1.5rem;
+        }
+
+        /* Streak Calendar */
+        .streak-calendar {
+            background: linear-gradient(135deg, var(--color-primary), var(--color-accent));
+            border-radius: 1.25rem;
+            padding: 1.25rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 4px 12px var(--color-shadow);
+        }
+
+        .streak-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .streak-info {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            color: white;
+        }
+
+        .streak-number {
+            font-family: 'Fraunces', serif;
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: white;
+        }
+
+        .streak-label {
+            font-size: 0.85rem;
+            opacity: 0.9;
+        }
+
+        .date-picker-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 0.75rem;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .date-picker-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .week-days {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 0.5rem;
+        }
+
+        .week-day {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .week-day-label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.8);
+            letter-spacing: 0.5px;
+        }
+
+        .week-day-dot {
+            width: 2.5rem;
+            height: 2.5rem;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            position: relative;
+            cursor: pointer;
+        }
+
+        .week-day-dot:hover {
+            transform: scale(1.1);
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .week-day-dot.completed {
+            background: white;
+            border-color: white;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        .week-day-dot.completed::after {
+            content: '✓';
+            color: var(--color-primary);
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+
+        .week-day-dot.today {
+            border-width: 3px;
+            border-color: white;
+        }
+
+        .week-day-dot.today:not(.completed) {
+            background: rgba(255, 255, 255, 0.4);
+        }
+
+        .week-day-number {
+            font-size: 0.75rem;
+            color: var(--color-primary);
+            font-weight: 600;
         }
 
         .date-header {
@@ -458,7 +581,7 @@
         .mood-tag[data-mood="peaceful"].active { background: var(--mood-peaceful); color: white; }
 
         .mood-tag[data-mood="excited"] { color: var(--mood-excited); }
-        .mood-tag[data-mood="excited"].active { background: var(--mood-excited); color: white; }
+        .mood-tag[data-mood="excited"].active { background: var(--color-excited); color: white; }
 
         .mood-tag[data-mood="joyful"] { color: var(--mood-joyful); }
         .mood-tag[data-mood="joyful"].active { background: var(--mood-joyful); color: var(--color-text); }
@@ -975,7 +1098,7 @@
             color: white;
         }
 
-        input[type="file"] {
+        input[type="file"], input[type="date"] {
             display: none;
         }
 
@@ -1032,6 +1155,26 @@
         <!-- Daily Entry View -->
         <div class="view-container active" id="daily-view">
             <div class="daily-view">
+                <!-- Streak Calendar -->
+                <div class="streak-calendar">
+                    <div class="streak-header">
+                        <div class="streak-info">
+                            <div class="streak-number" id="streakCount">0</div>
+                            <div class="streak-label">
+                                <div style="font-weight: 600;">Day Streak 🔥</div>
+                                <div style="font-size: 0.75rem; opacity: 0.8;">Keep it going!</div>
+                            </div>
+                        </div>
+                        <label for="datePicker" class="date-picker-btn">
+                            📅 Pick Date
+                        </label>
+                        <input type="date" id="datePicker" max="">
+                    </div>
+                    <div class="week-days" id="weekDays">
+                        <!-- Days will be populated by JavaScript -->
+                    </div>
+                </div>
+
                 <div class="date-header">
                     <div class="current-date" id="currentDate"></div>
                     <div class="current-day" id="currentDay"></div>
@@ -1351,6 +1494,122 @@
             });
         }
 
+        // Calculate current streak
+        async function calculateStreak() {
+            const entries = await getAllEntriesFromDB();
+            const sortedDates = Object.keys(entries)
+                .map(dateStr => new Date(dateStr))
+                .sort((a, b) => b - a);
+
+            if (sortedDates.length === 0) return 0;
+
+            let streak = 0;
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            let checkDate = new Date(today);
+
+            for (let i = 0; i < sortedDates.length; i++) {
+                const entryDate = new Date(sortedDates[i]);
+                entryDate.setHours(0, 0, 0, 0);
+
+                if (entryDate.getTime() === checkDate.getTime()) {
+                    streak++;
+                    checkDate.setDate(checkDate.getDate() - 1);
+                } else if (entryDate.getTime() < checkDate.getTime()) {
+                    break;
+                }
+            }
+
+            return streak;
+        }
+
+        // Update streak calendar
+        async function updateStreakCalendar() {
+            const entries = await getAllEntriesFromDB();
+            const streak = await calculateStreak();
+            document.getElementById('streakCount').textContent = streak;
+
+            const weekDaysContainer = document.getElementById('weekDays');
+            const today = new Date();
+            const dayOfWeek = today.getDay();
+            const startOfWeek = new Date(today);
+            startOfWeek.setDate(today.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1));
+
+            const dayLabels = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+
+            weekDaysContainer.innerHTML = '';
+
+            for (let i = 0; i < 7; i++) {
+                const date = new Date(startOfWeek);
+                date.setDate(startOfWeek.getDate() + i);
+                const dateStr = date.toDateString();
+                const hasEntry = entries[dateStr];
+                const isToday = date.toDateString() === today.toDateString();
+
+                const dayDiv = document.createElement('div');
+                dayDiv.className = 'week-day';
+
+                const dotClasses = ['week-day-dot'];
+                if (hasEntry) dotClasses.push('completed');
+                if (isToday) dotClasses.push('today');
+
+                dayDiv.innerHTML = `
+                    <div class="week-day-label">${dayLabels[i]}</div>
+                    <div class="${dotClasses.join(' ')}" onclick="loadDateEntry('${dateStr}')">
+                        ${!hasEntry && !isToday ? `<span class="week-day-number">${date.getDate()}</span>` : ''}
+                    </div>
+                `;
+
+                weekDaysContainer.appendChild(dayDiv);
+            }
+        }
+
+        // Load entry for a specific date
+        async function loadDateEntry(dateStr) {
+            const date = new Date(dateStr);
+            const entry = await getEntryFromDB(dateStr);
+
+            if (entry) {
+                // Edit existing entry
+                await editEntry(dateStr);
+            } else {
+                // Create new entry for this date
+                editingDate = dateStr;
+                document.getElementById('currentDate').textContent = date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+                document.getElementById('currentDay').textContent = date.toLocaleDateString('en-US', { weekday: 'long' });
+                document.getElementById('editingBadge').style.display = 'block';
+
+                // Clear form
+                clearForm();
+
+                // Scroll to top
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        }
+
+        // Clear the form
+        function clearForm() {
+            currentRating = 0;
+            selectedMoods = [];
+            kidsPhotoData = null;
+            selfPhotoData = null;
+
+            document.querySelectorAll('.mood-number').forEach(n => n.classList.remove('active'));
+            document.querySelectorAll('.mood-tag').forEach(t => t.classList.remove('active'));
+
+            document.getElementById('kidsText').value = '';
+            document.getElementById('selfText').value = '';
+            document.getElementById('promptAnswer').value = '';
+
+            document.getElementById('kidsPhotoPreview').classList.remove('has-photo');
+            document.getElementById('selfPhotoPreview').classList.remove('has-photo');
+            document.getElementById('kidsPhoto').value = '';
+            document.getElementById('selfPhoto').value = '';
+
+            document.getElementById('dailyPrompt').style.display = 'none';
+        }
+
         // Initialize app
         document.addEventListener('DOMContentLoaded', async () => {
             await initDB();
@@ -1359,6 +1618,11 @@
             updateCurrentDate();
             await loadTodayEntry();
             await checkForPrompt();
+            await updateStreakCalendar();
+
+            // Set max date for date picker to today
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('datePicker').max = today;
         });
 
         function initializeApp() {
@@ -1371,7 +1635,7 @@
             window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
                 if (event.matches) {
                     document.documentElement.classList.add('dark');
-                    document.getElementById('darkModeToggle').textContent = '☀️';
+                    document.getElementById('darkModeToggle').textContent = '☀���';
                 } else {
                     document.documentElement.classList.remove('dark');
                     document.getElementById('darkModeToggle').textContent = '🌙';
@@ -1510,6 +1774,13 @@
             document.getElementById('cancelEdit').addEventListener('click', () => {
                 cancelEdit();
             });
+
+            // Date picker
+            document.getElementById('datePicker').addEventListener('change', (e) => {
+                const selectedDate = new Date(e.target.value + 'T00:00:00');
+                loadDateEntry(selectedDate.toDateString());
+                e.target.value = ''; // Reset picker
+            });
         }
 
         function updateCurrentDate() {
@@ -1638,6 +1909,9 @@
 
             showMessage(editingDate ? '✨ Entry updated successfully!' : '✨ Entry saved successfully!', 'success');
 
+            // Update streak calendar
+            await updateStreakCalendar();
+
             if (editingDate) {
                 cancelEdit();
             }
@@ -1699,16 +1973,19 @@
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
-        function cancelEdit() {
+        async function cancelEdit() {
             editingDate = null;
             document.getElementById('editingBadge').style.display = 'none';
             updateCurrentDate();
-            loadTodayEntry();
+            await loadTodayEntry();
         }
 
         async function loadTodayEntry() {
             const today = new Date().toDateString();
             const entry = await getEntryFromDB(today);
+
+            // Clear form first
+            clearForm();
 
             if (entry) {
                 // Load existing entry
@@ -1774,6 +2051,8 @@
                 await updateWeeklyView();
             } else if (view === 'monthly') {
                 await updateMonthlyView();
+            } else if (view === 'daily') {
+                await updateStreakCalendar();
             }
         }
 
@@ -2009,3 +2288,4 @@
     </script>
 </body>
 </html>
+

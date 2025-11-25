@@ -1,5 +1,4 @@
-uodated code
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -1356,23 +1355,23 @@ uodated code
 
             // Timeline filters
             document.querySelectorAll('.filter-btn').forEach(btn => {
-                btn.addEventListener('click', () => {
+                btn.addEventListener('click', async () => {
                     document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
                     btn.classList.add('active');
-                    loadTimeline(btn.dataset.filter);
+                    await loadTimeline(btn.dataset.filter);
                 });
             });
 
             // Month navigation
-            document.getElementById('prevMonth').addEventListener('click', () => {
+            document.getElementById('prevMonth').addEventListener('click', async () => {
                 currentMonthOffset--;
-                updateMonthlyView();
+                await updateMonthlyView();
             });
 
-            document.getElementById('nextMonth').addEventListener('click', () => {
+            document.getElementById('nextMonth').addEventListener('click', async () => {
                 if (currentMonthOffset < 0) {
                     currentMonthOffset++;
-                    updateMonthlyView();
+                    await updateMonthlyView();
                 }
             });
 
@@ -1395,9 +1394,9 @@ uodated code
             document.getElementById('currentDay').textContent = now.toLocaleDateString('en-US', { weekday: 'long' });
         }
 
-        function checkForPrompt() {
+        async function checkForPrompt() {
             const today = new Date().toDateString();
-            const lastPromptDate = localStorage.getItem('lastPromptDate');
+            const lastPromptDate = await getSettingFromDB('lastPromptDate');
             const promptShownToday = lastPromptDate === today;
 
             // Show prompt randomly (30% chance) if not shown today
@@ -1478,7 +1477,7 @@ uodated code
             recognition.start();
         }
 
-        function saveEntry() {
+        async function saveEntry() {
             const kidsText = document.getElementById('kidsText').value.trim();
             const selfText = document.getElementById('selfText').value.trim();
             const promptAnswer = document.getElementById('promptAnswer').value.trim();
@@ -1504,14 +1503,12 @@ uodated code
                     : null
             };
 
-            // Save to localStorage
-            const entries = getEntries();
-            entries[today] = entry;
-            localStorage.setItem('diaryEntries', JSON.stringify(entries));
+            // Save to IndexedDB
+            await saveEntryToDB(today, entry);
 
             // Update last prompt date if prompt was shown
             if (entry.promptQuestion) {
-                localStorage.setItem('lastPromptDate', today);
+                await saveSettingToDB('lastPromptDate', today);
             }
 
             showMessage('✨ Entry saved successfully!', 'success');
@@ -1522,10 +1519,9 @@ uodated code
             }, 1000);
         }
 
-        function loadTodayEntry() {
+        async function loadTodayEntry() {
             const today = new Date().toDateString();
-            const entries = getEntries();
-            const entry = entries[today];
+            const entry = await getEntryFromDB(today);
 
             if (entry) {
                 // Load existing entry
@@ -1569,7 +1565,7 @@ uodated code
             }, 3000);
         }
 
-        function switchView(view) {
+        async function switchView(view) {
             currentView = view;
 
             // Update nav tabs
@@ -1586,26 +1582,21 @@ uodated code
 
             // Load view-specific data
             if (view === 'timeline') {
-                loadTimeline('all');
+                await loadTimeline('all');
             } else if (view === 'weekly') {
-                updateWeeklyView();
+                await updateWeeklyView();
             } else if (view === 'monthly') {
-                updateMonthlyView();
+                await updateMonthlyView();
             }
         }
 
-        function getEntries() {
-            const data = localStorage.getItem('diaryEntries');
-            return data ? JSON.parse(data) : {};
-        }
-
-        function loadTimeline(filter) {
-            const entries = getEntries();
+        async function loadTimeline(filter) {
+            const entries = await getAllEntriesFromDB();
             const container = document.getElementById('timelineEntries');
             const flashbackContainer = document.getElementById('flashbackContainer');
 
             // Show flashback
-            const flashback = getRandomFlashback();
+            const flashback = await getRandomFlashback();
             if (flashback) {
                 flashbackContainer.innerHTML = `
                     <div class="flashback-card">
@@ -1681,8 +1672,9 @@ uodated code
             }).join('');
         }
 
-        function getRandomFlashback() {
-            const entries = Object.values(getEntries());
+        async function getRandomFlashback() {
+            const entriesObj = await getAllEntriesFromDB();
+            const entries = Object.values(entriesObj);
             const today = new Date().toDateString();
             const oldEntries = entries.filter(e => e.date !== today && new Date(e.date) < new Date());
 
@@ -1694,8 +1686,9 @@ uodated code
             return text ? { date: random.date, text } : null;
         }
 
-        function updateWeeklyView() {
-            const entries = Object.values(getEntries());
+        async function updateWeeklyView() {
+            const entriesObj = await getAllEntriesFromDB();
+            const entries = Object.values(entriesObj);
             const now = new Date();
             const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
             const weekEntries = entries.filter(e => new Date(e.date) >= weekAgo);
@@ -1733,13 +1726,14 @@ uodated code
             }
         }
 
-        function updateMonthlyView() {
+        async function updateMonthlyView() {
             const now = new Date();
             const targetMonth = new Date(now.getFullYear(), now.getMonth() + currentMonthOffset, 1);
             const monthName = targetMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
             document.getElementById('currentMonth').textContent = monthName;
 
-            const entries = Object.values(getEntries());
+            const entriesObj = await getAllEntriesFromDB();
+            const entries = Object.values(entriesObj);
             const monthEntries = entries.filter(e => {
                 const entryDate = new Date(e.date);
                 return entryDate.getMonth() === targetMonth.getMonth() &&

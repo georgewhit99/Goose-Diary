@@ -27,6 +27,22 @@
             --mood-overwhelmed: #c4918b;
             --mood-peaceful: #a8c5b9;
             --mood-excited: #f19c79;
+            --mood-joyful: #ffd166;
+            --mood-proud: #d4a574;
+            --mood-energetic: #f4a261;
+            --mood-calm: #b8d4cc;
+            --mood-hopeful: #a8c5e0;
+            --mood-loved: #e5a3b4;
+            --mood-content: #c8b8a8;
+            --mood-exhausted: #9da3ad;
+            --mood-stressed: #b58a8a;
+            --mood-frustrated: #c49090;
+            --mood-sad: #9eb5c8;
+            --mood-lonely: #a8a3b8;
+            --mood-worried: #a89fb8;
+            --mood-confused: #b5a8a8;
+            --mood-restless: #b8a8a3;
+            --mood-inspired: #c5b5e0;
         }
 
         .dark {
@@ -216,9 +232,17 @@
             gap: 0.5rem;
         }
 
-        .mood-star {
-            width: 3rem;
-            height: 3rem;
+        .rating-label {
+            text-align: center;
+            color: var(--color-text-secondary);
+            font-size: 0.85rem;
+            margin-bottom: 0.75rem;
+            font-weight: 500;
+        }
+
+        .mood-number {
+            width: 3.5rem;
+            height: 3.5rem;
             border-radius: 50%;
             border: 2px solid var(--color-border);
             background: var(--color-bg);
@@ -227,22 +251,27 @@
             align-items: center;
             justify-content: center;
             font-size: 1.5rem;
+            font-weight: 700;
+            font-family: 'Fraunces', serif;
+            color: var(--color-text-secondary);
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             position: relative;
         }
 
-        .mood-star:hover {
+        .mood-number:hover {
             transform: scale(1.1);
             border-color: var(--color-primary);
+            color: var(--color-primary);
         }
 
-        .mood-star.active {
+        .mood-number.active {
             background: var(--color-primary);
             border-color: var(--color-primary);
+            color: white;
             transform: scale(1.15);
         }
 
-        .mood-star.active::after {
+        .mood-number.active::after {
             content: '';
             position: absolute;
             inset: -8px;
@@ -431,6 +460,54 @@
         .mood-tag[data-mood="excited"] { color: var(--mood-excited); }
         .mood-tag[data-mood="excited"].active { background: var(--mood-excited); color: white; }
 
+        .mood-tag[data-mood="joyful"] { color: var(--mood-joyful); }
+        .mood-tag[data-mood="joyful"].active { background: var(--mood-joyful); color: var(--color-text); }
+
+        .mood-tag[data-mood="proud"] { color: var(--mood-proud); }
+        .mood-tag[data-mood="proud"].active { background: var(--mood-proud); color: white; }
+
+        .mood-tag[data-mood="energetic"] { color: var(--mood-energetic); }
+        .mood-tag[data-mood="energetic"].active { background: var(--mood-energetic); color: white; }
+
+        .mood-tag[data-mood="calm"] { color: var(--mood-calm); }
+        .mood-tag[data-mood="calm"].active { background: var(--mood-calm); color: white; }
+
+        .mood-tag[data-mood="hopeful"] { color: var(--mood-hopeful); }
+        .mood-tag[data-mood="hopeful"].active { background: var(--mood-hopeful); color: white; }
+
+        .mood-tag[data-mood="loved"] { color: var(--mood-loved); }
+        .mood-tag[data-mood="loved"].active { background: var(--mood-loved); color: white; }
+
+        .mood-tag[data-mood="content"] { color: var(--mood-content); }
+        .mood-tag[data-mood="content"].active { background: var(--mood-content); color: white; }
+
+        .mood-tag[data-mood="exhausted"] { color: var(--mood-exhausted); }
+        .mood-tag[data-mood="exhausted"].active { background: var(--mood-exhausted); color: white; }
+
+        .mood-tag[data-mood="stressed"] { color: var(--mood-stressed); }
+        .mood-tag[data-mood="stressed"].active { background: var(--mood-stressed); color: white; }
+
+        .mood-tag[data-mood="frustrated"] { color: var(--mood-frustrated); }
+        .mood-tag[data-mood="frustrated"].active { background: var(--mood-frustrated); color: white; }
+
+        .mood-tag[data-mood="sad"] { color: var(--mood-sad); }
+        .mood-tag[data-mood="sad"].active { background: var(--mood-sad); color: white; }
+
+        .mood-tag[data-mood="lonely"] { color: var(--mood-lonely); }
+        .mood-tag[data-mood="lonely"].active { background: var(--mood-lonely); color: white; }
+
+        .mood-tag[data-mood="worried"] { color: var(--mood-worried); }
+        .mood-tag[data-mood="worried"].active { background: var(--mood-worried); color: white; }
+
+        .mood-tag[data-mood="confused"] { color: var(--mood-confused); }
+        .mood-tag[data-mood="confused"].active { background: var(--mood-confused); color: white; }
+
+        .mood-tag[data-mood="restless"] { color: var(--mood-restless); }
+        .mood-tag[data-mood="restless"].active { background: var(--mood-restless); color: white; }
+
+        .mood-tag[data-mood="inspired"] { color: var(--mood-inspired); }
+        .mood-tag[data-mood="inspired"].active { background: var(--mood-inspired); color: white; }
+
         /* Daily Prompt */
         .daily-prompt {
             background: linear-gradient(135deg, var(--color-primary), var(--color-accent));
@@ -517,11 +594,28 @@
             box-shadow: 0 2px 8px var(--color-shadow);
             border-left: 4px solid var(--color-primary);
             transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
         }
 
         .moment-card:hover {
             transform: translateX(4px);
             box-shadow: 0 4px 16px var(--color-shadow);
+        }
+
+        .moment-card::after {
+            content: '✏️ Edit';
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            font-size: 0.85rem;
+            color: var(--color-primary);
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+
+        .moment-card:hover::after {
+            opacity: 1;
         }
 
         .moment-date {
@@ -941,6 +1035,14 @@
                 <div class="date-header">
                     <div class="current-date" id="currentDate"></div>
                     <div class="current-day" id="currentDay"></div>
+                    <div id="editingBadge" style="display: none; margin-top: 0.5rem;">
+                        <span style="background: var(--color-primary); color: white; padding: 0.25rem 0.75rem; border-radius: 1rem; font-size: 0.85rem;">
+                            ✏️ Editing
+                        </span>
+                        <button id="cancelEdit" style="background: var(--color-border); border: none; padding: 0.25rem 0.75rem; border-radius: 1rem; font-size: 0.85rem; margin-left: 0.5rem; cursor: pointer;">
+                            Cancel
+                        </button>
+                    </div>
                 </div>
 
                 <div id="successMessage"></div>
@@ -958,13 +1060,14 @@
 
                 <!-- Mood Rating -->
                 <div class="section-card">
-                    <h2 class="section-title">How was your day?</h2>
+                    <h2 class="section-title">Rate your day</h2>
+                    <div class="rating-label">1 (Tough) → 5 (Amazing)</div>
                     <div class="mood-rating" id="moodRating">
-                        <button class="mood-star" data-rating="1">⭐</button>
-                        <button class="mood-star" data-rating="2">⭐</button>
-                        <button class="mood-star" data-rating="3">⭐</button>
-                        <button class="mood-star" data-rating="4">⭐</button>
-                        <button class="mood-star" data-rating="5">⭐</button>
+                        <button class="mood-number" data-rating="1">1</button>
+                        <button class="mood-number" data-rating="2">2</button>
+                        <button class="mood-number" data-rating="3">3</button>
+                        <button class="mood-number" data-rating="4">4</button>
+                        <button class="mood-number" data-rating="5">5</button>
                     </div>
                 </div>
 
@@ -1013,17 +1116,33 @@
                     <h2 class="section-title">Today I felt...</h2>
                     <div class="mood-tags" id="moodTags">
                         <button class="mood-tag" data-mood="happy">😊 Happy</button>
+                        <button class="mood-tag" data-mood="joyful">🌟 Joyful</button>
                         <button class="mood-tag" data-mood="grateful">🙏 Grateful</button>
+                        <button class="mood-tag" data-mood="proud">🏆 Proud</button>
                         <button class="mood-tag" data-mood="motivated">💪 Motivated</button>
+                        <button class="mood-tag" data-mood="energetic">⚡ Energetic</button>
                         <button class="mood-tag" data-mood="peaceful">😌 Peaceful</button>
+                        <button class="mood-tag" data-mood="calm">🧘 Calm</button>
                         <button class="mood-tag" data-mood="excited">🎉 Excited</button>
+                        <button class="mood-tag" data-mood="hopeful">🌈 Hopeful</button>
+                        <button class="mood-tag" data-mood="loved">💕 Loved</button>
+                        <button class="mood-tag" data-mood="content">☺️ Content</button>
                         <button class="mood-tag" data-mood="tired">😴 Tired</button>
+                        <button class="mood-tag" data-mood="exhausted">😫 Exhausted</button>
                         <button class="mood-tag" data-mood="anxious">😰 Anxious</button>
+                        <button class="mood-tag" data-mood="stressed">😣 Stressed</button>
                         <button class="mood-tag" data-mood="overwhelmed">😓 Overwhelmed</button>
+                        <button class="mood-tag" data-mood="frustrated">😤 Frustrated</button>
+                        <button class="mood-tag" data-mood="sad">😢 Sad</button>
+                        <button class="mood-tag" data-mood="lonely">😔 Lonely</button>
+                        <button class="mood-tag" data-mood="worried">😟 Worried</button>
+                        <button class="mood-tag" data-mood="confused">😕 Confused</button>
+                        <button class="mood-tag" data-mood="restless">😬 Restless</button>
+                        <button class="mood-tag" data-mood="inspired">✨ Inspired</button>
                     </div>
                 </div>
 
-                <button class="save-btn" id="saveEntry">Save Today's Entry</button>
+                <button class="save-btn" id="saveEntry">Save Entry</button>
             </div>
         </div>
 
@@ -1132,6 +1251,7 @@
         let recognition = null;
         let currentVoiceInput = null;
         let db = null;
+        let editingDate = null;
 
         // Daily prompts
         const prompts = [
@@ -1305,9 +1425,9 @@
             });
 
             // Mood rating
-            document.querySelectorAll('.mood-star').forEach(star => {
-                star.addEventListener('click', () => {
-                    const rating = parseInt(star.dataset.rating);
+            document.querySelectorAll('.mood-number').forEach(number => {
+                number.addEventListener('click', () => {
+                    const rating = parseInt(number.dataset.rating);
                     setMoodRating(rating);
                 });
             });
@@ -1385,6 +1505,11 @@
                     document.getElementById('photoModal').classList.remove('active');
                 }
             });
+
+            // Cancel edit button
+            document.getElementById('cancelEdit').addEventListener('click', () => {
+                cancelEdit();
+            });
         }
 
         function updateCurrentDate() {
@@ -1409,11 +1534,11 @@
 
         function setMoodRating(rating) {
             currentRating = rating;
-            document.querySelectorAll('.mood-star').forEach((star, index) => {
-                if (index < rating) {
-                    star.classList.add('active');
+            document.querySelectorAll('.mood-number').forEach((number, index) => {
+                if (index + 1 === rating) {
+                    number.classList.add('active');
                 } else {
-                    star.classList.remove('active');
+                    number.classList.remove('active');
                 }
             });
         }
@@ -1487,9 +1612,9 @@
                 return;
             }
 
-            const today = new Date().toDateString();
+            const dateToSave = editingDate || new Date().toDateString();
             const entry = {
-                date: today,
+                date: dateToSave,
                 timestamp: new Date().toISOString(),
                 rating: currentRating,
                 kidsText,
@@ -1504,19 +1629,81 @@
             };
 
             // Save to IndexedDB
-            await saveEntryToDB(today, entry);
+            await saveEntryToDB(dateToSave, entry);
 
             // Update last prompt date if prompt was shown
-            if (entry.promptQuestion) {
-                await saveSettingToDB('lastPromptDate', today);
+            if (entry.promptQuestion && !editingDate) {
+                await saveSettingToDB('lastPromptDate', dateToSave);
             }
 
-            showMessage('✨ Entry saved successfully!', 'success');
+            showMessage(editingDate ? '✨ Entry updated successfully!' : '✨ Entry saved successfully!', 'success');
 
-            // Clear form after short delay
-            setTimeout(() => {
-                // Don't clear on same day, just show success
-            }, 1000);
+            if (editingDate) {
+                cancelEdit();
+            }
+        }
+
+        async function editEntry(dateStr) {
+            editingDate = dateStr;
+            const entry = await getEntryFromDB(dateStr);
+
+            if (!entry) return;
+
+            // Switch to daily view
+            await switchView('daily');
+
+            // Update UI to show editing mode
+            const date = new Date(dateStr);
+            document.getElementById('currentDate').textContent = date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+            document.getElementById('currentDay').textContent = date.toLocaleDateString('en-US', { weekday: 'long' });
+            document.getElementById('editingBadge').style.display = 'block';
+
+            // Load entry data
+            if (entry.rating) {
+                setMoodRating(entry.rating);
+            }
+
+            document.getElementById('kidsText').value = entry.kidsText || '';
+            document.getElementById('selfText').value = entry.selfText || '';
+            document.getElementById('promptAnswer').value = entry.promptAnswer || '';
+
+            if (entry.kidsPhoto) {
+                kidsPhotoData = entry.kidsPhoto;
+                document.getElementById('kidsPhotoImg').src = entry.kidsPhoto;
+                document.getElementById('kidsPhotoPreview').classList.add('has-photo');
+            }
+
+            if (entry.selfPhoto) {
+                selfPhotoData = entry.selfPhoto;
+                document.getElementById('selfPhotoImg').src = entry.selfPhoto;
+                document.getElementById('selfPhotoPreview').classList.add('has-photo');
+            }
+
+            if (entry.moods) {
+                selectedMoods = [...entry.moods];
+                document.querySelectorAll('.mood-tag').forEach(tag => {
+                    if (selectedMoods.includes(tag.dataset.mood)) {
+                        tag.classList.add('active');
+                    } else {
+                        tag.classList.remove('active');
+                    }
+                });
+            }
+
+            if (entry.promptQuestion) {
+                document.getElementById('promptQuestion').textContent = entry.promptQuestion;
+                document.getElementById('dailyPrompt').style.display = 'block';
+            }
+
+            // Scroll to top
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function cancelEdit() {
+            editingDate = null;
+            document.getElementById('editingBadge').style.display = 'none';
+            updateCurrentDate();
+            loadTodayEntry();
         }
 
         async function loadTodayEntry() {
@@ -1638,7 +1825,7 @@
                     : 'var(--color-primary)';
 
                 return `
-                    <div class="moment-card" style="border-left-color: ${moodColor}">
+                    <div class="moment-card" style="border-left-color: ${moodColor}" onclick="editEntry('${entry.date}')">
                         <div class="moment-date">${date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</div>
                         ${entry.rating ? `
                             <div class="moment-rating">
@@ -1664,7 +1851,7 @@
                         ` : ''}
                         ${photo ? `
                             <div class="moment-photo">
-                                <img src="${photo}" alt="Moment photo" onclick="showPhotoModal('${photo}')">
+                                <img src="${photo}" alt="Moment photo" onclick="event.stopPropagation(); showPhotoModal('${photo}')">
                             </div>
                         ` : ''}
                     </div>

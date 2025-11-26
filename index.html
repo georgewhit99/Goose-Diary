@@ -1412,6 +1412,908 @@
         </div>
     </div>
 
-    <script src="https://pfst.cf2.poecdn.net/base/text/90a60aa31194d5a968dbd08286555f959d9796fc3511727cac9c7043bf349e0b" defer></script>
-</body>
+     <script>
+        // App State
+        let currentRating = 0;
+        let selectedMoods = [];
+        let kidsPhotoData = null;
+        let selfPhotoData = null;
+        let currentView = 'daily';
+        let currentMonthOffset = 0;
+        let recognition = null;
+        let currentVoiceInput = null;
+        let db = null;
+        let editingDate = null;
+
+        // Daily prompts
+        const prompts = [
+            "What made you smile today?",
+            "One thing you did well today?",
+            "What are you grateful for?",
+            "A small win you had today?",
+            "What brought you peace today?",
+            "What surprised you today?",
+            "What did you learn today?",
+            "How did you show yourself kindness?",
+            "What moment would you relive?",
+            "What made you proud today?"
+        ];
+
+        // Initialize IndexedDB
+        function initDB() {
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open('DiaryDB', 1);
+
+                request.onerror = () => reject(request.error);
+                request.onsuccess = () => {
+                    db = request.result;
+                    resolve(db);
+                };
+
+                request.onupgradeneeded = (event) => {
+                    const database = event.target.result;
+                    if (!database.objectStoreNames.contains('entries')) {
+                        database.createObjectStore('entries', { keyPath: 'date' });
+                    }
+                    if (!database.objectStoreNames.contains('settings')) {
+                        database.createObjectStore('settings', { keyPath: 'key' });
+                    }
+                };
+            });
+        }
+
+        async function saveEntryToDB(key, value) {
+            if (!db) await initDB();
+            return new Promise((resolve, reject) => {
+                const transaction = db.transaction(['entries'], 'readwrite');
+                const store = transaction.objectStore('entries');
+                const request = store.put(value);
+                request.onsuccess = () => resolve();
+                request.onerror = () => reject(request.error);
+            });
+        }
+
+        async function getEntryFromDB(key) {
+            if (!db) await initDB();
+            return new Promise((resolve, reject) => {
+                const transaction = db.transaction(['entries'], 'readonly');
+                const store = transaction.objectStore('entries');
+                const request = store.get(key);
+                request.onsuccess = () => resolve(request.result);
+                request.onerror = () => reject(request.error);
+            });
+        }
+
+        async function getAllEntriesFromDB() {
+            if (!db) await initDB();
+            return new Promise((resolve, reject) => {
+                const transaction = db.transaction(['entries'], 'readonly');
+                const store = transaction.objectStore('entries');
+                const request = store.getAll();
+                request.onsuccess = () => {
+                    const entries = {};
+                    request.result.forEach(entry => {
+                        entries[entry.date] = entry;
+                    });
+                    resolve(entries);
+                };
+                request.onerror = () => reject(request.error);
+            });
+        }
+
+        async function saveSettingToDB(key, value) {
+            if (!db) await initDB();
+            return new Promise((resolve, reject) => {
+                const transaction = db.transaction(['settings'], 'readwrite');
+                const store = transaction.objectStore('settings');
+                const request = store.put({ key, value });
+                request.onsuccess = () => resolve();
+                request.onerror = () => reject(request.error);
+            });
+        }
+
+        async function getSettingFromDB(key) {
+            if (!db) await initDB();
+            return new Promise((resolve, reject) => {
+                const transaction = db.transaction(['settings'], 'readonly');
+                const store = transaction.objectStore('settings');
+                const request = store.get(key);
+                request.onsuccess = () => resolve(request.result ? request.result.value : null);
+                request.onerror = () => reject(request.error);
+            });
+        }
+
+        // Calculate current streak
+        async function calculateStreak() {
+            const entries = await getAllEntriesFromDB();
+            const sortedDates = Object.keys(entries)
+                .map(dateStr => new Date(dateStr))
+                .sort((a, b) => b - a);
+
+            if (sortedDates.length === 0) return 0;
+
+            let streak = 0;
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            let checkDate = new Date(today);
+
+            for (let i = 0; i < sortedDates.length; i++) {
+                const entryDate = new Date(sortedDates[i]);
+                entryDate.setHours(0, 0, 0, 0);
+
+                if (entryDate.getTime() === checkDate.getTime()) {
+                    streak++;
+                    checkDate.setDate(checkDate.getDate() - 1);
+                } else if (entryDate.getTime() < checkDate.getTime()) {
+                    break;
+                }
+            }
+
+            return streak;
+        }
+
+        // Update streak calendar
+        async function updateStreakCalendar() {
+            const entries = await getAllEntriesFromDB();
+            const streak = await calculateStreak();
+            document.getElementById('streakCount').textContent = streak;
+
+            const weekDaysContainer = document.getElementById('weekDays');
+            const today = new Date();
+            const dayOfWeek = today.getDay();
+            const startOfWeek = new Date(today);
+            startOfWeek.setDate(today.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1));
+
+            const dayLabels = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+
+            weekDaysContainer.innerHTML = '';
+
+            for (let i = 0; i < 7; i++) {
+                const date = new Date(startOfWeek);
+                date.setDate(startOfWeek.getDate() + i);
+                const dateStr = date.toDateString();
+                const hasEntry = entries[dateStr];
+                const isToday = date.toDateString() === today.toDateString();
+
+                const dayDiv = document.createElement('div');
+                dayDiv.className = 'week-day';
+
+                const dotClasses = ['week-day-dot'];
+                if (hasEntry) dotClasses.push('completed');
+                if (isToday) dotClasses.push('today');
+
+                dayDiv.innerHTML = `
+                    <div class="week-day-label">${dayLabels[i]}</div>
+                    <div class="${dotClasses.join(' ')}" onclick="loadDateEntry('${dateStr}')">
+                        ${!hasEntry && !isToday ? `<span class="week-day-number">${date.getDate()}</span>` : ''}
+                    </div>
+                `;
+
+                weekDaysContainer.appendChild(dayDiv);
+            }
+        }
+
+        // Load entry for a specific date
+        async function loadDateEntry(dateStr) {
+            const date = new Date(dateStr);
+            const entry = await getEntryFromDB(dateStr);
+
+            if (entry) {
+                // Edit existing entry
+                await editEntry(dateStr);
+            } else {
+                // Create new entry for this date
+                editingDate = dateStr;
+                document.getElementById('currentDate').textContent = date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+                document.getElementById('currentDay').textContent = date.toLocaleDateString('en-US', { weekday: 'long' });
+                document.getElementById('editingBadge').style.display = 'block';
+
+                // Clear form
+                clearForm();
+
+                // Scroll to top
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        }
+
+        // Clear the form
+        function clearForm() {
+            currentRating = 0;
+            selectedMoods = [];
+            kidsPhotoData = null;
+            selfPhotoData = null;
+
+            document.querySelectorAll('.mood-number').forEach(n => n.classList.remove('active'));
+            document.querySelectorAll('.mood-tag').forEach(t => t.classList.remove('active'));
+
+            document.getElementById('kidsText').value = '';
+            document.getElementById('selfText').value = '';
+            document.getElementById('promptAnswer').value = '';
+
+            document.getElementById('kidsPhotoPreview').classList.remove('has-photo');
+            document.getElementById('selfPhotoPreview').classList.remove('has-photo');
+            document.getElementById('kidsPhoto').value = '';
+            document.getElementById('selfPhoto').value = '';
+
+            document.getElementById('dailyPrompt').style.display = 'none';
+        }
+
+        // Initialize app
+        document.addEventListener('DOMContentLoaded', async () => {
+            await initDB();
+            initializeApp();
+            setupEventListeners();
+            updateCurrentDate();
+            await loadTodayEntry();
+            await checkForPrompt();
+            await updateStreakCalendar();
+
+            // Set max date for date picker to today
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('datePicker').max = today;
+        });
+
+        function initializeApp() {
+            // Check for dark mode preference
+            if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                document.documentElement.classList.add('dark');
+                document.getElementById('darkModeToggle').textContent = '☀️';
+            }
+
+            window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
+                if (event.matches) {
+                    document.documentElement.classList.add('dark');
+                    document.getElementById('darkModeToggle').textContent = '☀���';
+                } else {
+                    document.documentElement.classList.remove('dark');
+                    document.getElementById('darkModeToggle').textContent = '🌙';
+                }
+            });
+
+            // Initialize Web Speech API
+            if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+                const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                recognition = new SpeechRecognition();
+                recognition.continuous = false;
+                recognition.interimResults = false;
+                recognition.lang = 'en-US';
+
+                recognition.onresult = (event) => {
+                    const transcript = event.results[0][0].transcript;
+                    if (currentVoiceInput) {
+                        currentVoiceInput.value += (currentVoiceInput.value ? ' ' : '') + transcript;
+                    }
+                };
+
+                recognition.onerror = (event) => {
+                    console.error('Speech recognition error:', event.error);
+                    if (currentVoiceInput && currentVoiceInput.dataset.voiceBtn) {
+                        document.getElementById(currentVoiceInput.dataset.voiceBtn).classList.remove('recording');
+                    }
+                };
+
+                recognition.onend = () => {
+                    if (currentVoiceInput && currentVoiceInput.dataset.voiceBtn) {
+                        document.getElementById(currentVoiceInput.dataset.voiceBtn).classList.remove('recording');
+                    }
+                };
+            }
+        }
+
+        function setupEventListeners() {
+            // Dark mode toggle
+            document.getElementById('darkModeToggle').addEventListener('click', () => {
+                document.documentElement.classList.toggle('dark');
+                const isDark = document.documentElement.classList.contains('dark');
+                document.getElementById('darkModeToggle').textContent = isDark ? '☀️' : '🌙';
+            });
+
+            // Navigation tabs
+            document.querySelectorAll('.nav-tab').forEach(tab => {
+                tab.addEventListener('click', () => {
+                    const view = tab.dataset.view;
+                    switchView(view);
+                });
+            });
+
+            // Mood rating
+            document.querySelectorAll('.mood-number').forEach(number => {
+                number.addEventListener('click', () => {
+                    const rating = parseInt(number.dataset.rating);
+                    setMoodRating(rating);
+                });
+            });
+
+            // Mood tags
+            document.querySelectorAll('.mood-tag').forEach(tag => {
+                tag.addEventListener('click', () => {
+                    toggleMoodTag(tag);
+                });
+            });
+
+            // Photo uploads
+            document.getElementById('kidsPhoto').addEventListener('change', (e) => {
+                handlePhotoUpload(e, 'kids');
+            });
+
+            document.getElementById('selfPhoto').addEventListener('change', (e) => {
+                handlePhotoUpload(e, 'self');
+            });
+
+            // Remove photos
+            document.getElementById('removeKidsPhoto').addEventListener('click', () => {
+                removePhoto('kids');
+            });
+
+            document.getElementById('removeSelfPhoto').addEventListener('click', () => {
+                removePhoto('self');
+            });
+
+            // Voice input buttons
+            document.getElementById('kidsVoiceBtn').addEventListener('click', () => {
+                startVoiceInput('kidsText', 'kidsVoiceBtn');
+            });
+
+            document.getElementById('selfVoiceBtn').addEventListener('click', () => {
+                startVoiceInput('selfText', 'selfVoiceBtn');
+            });
+
+            document.getElementById('promptVoiceBtn').addEventListener('click', () => {
+                startVoiceInput('promptAnswer', 'promptVoiceBtn');
+            });
+
+            // Save entry
+            document.getElementById('saveEntry').addEventListener('click', saveEntry);
+
+            // Timeline filters
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.addEventListener('click', async () => {
+                    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    await loadTimeline(btn.dataset.filter);
+                });
+            });
+
+            // Month navigation
+            document.getElementById('prevMonth').addEventListener('click', async () => {
+                currentMonthOffset--;
+                await updateMonthlyView();
+            });
+
+            document.getElementById('nextMonth').addEventListener('click', async () => {
+                if (currentMonthOffset < 0) {
+                    currentMonthOffset++;
+                    await updateMonthlyView();
+                }
+            });
+
+            // Photo modal
+            document.getElementById('closePhotoModal').addEventListener('click', () => {
+                document.getElementById('photoModal').classList.remove('active');
+            });
+
+            document.getElementById('photoModal').addEventListener('click', (e) => {
+                if (e.target.id === 'photoModal') {
+                    document.getElementById('photoModal').classList.remove('active');
+                }
+            });
+
+            // Cancel edit button
+            document.getElementById('cancelEdit').addEventListener('click', () => {
+                cancelEdit();
+            });
+
+            // Date picker
+            document.getElementById('datePicker').addEventListener('change', (e) => {
+                const selectedDate = new Date(e.target.value + 'T00:00:00');
+                loadDateEntry(selectedDate.toDateString());
+                e.target.value = ''; // Reset picker
+            });
+        }
+
+        function updateCurrentDate() {
+            const now = new Date();
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            document.getElementById('currentDate').textContent = now.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+            document.getElementById('currentDay').textContent = now.toLocaleDateString('en-US', { weekday: 'long' });
+        }
+
+        async function checkForPrompt() {
+            const today = new Date().toDateString();
+            const lastPromptDate = await getSettingFromDB('lastPromptDate');
+            const promptShownToday = lastPromptDate === today;
+
+            // Show prompt randomly (30% chance) if not shown today
+            if (!promptShownToday && Math.random() < 0.3) {
+                const randomPrompt = prompts[Math.floor(Math.random() * prompts.length)];
+                document.getElementById('promptQuestion').textContent = randomPrompt;
+                document.getElementById('dailyPrompt').style.display = 'block';
+            }
+        }
+
+        function setMoodRating(rating) {
+            currentRating = rating;
+            document.querySelectorAll('.mood-number').forEach((number, index) => {
+                if (index + 1 === rating) {
+                    number.classList.add('active');
+                } else {
+                    number.classList.remove('active');
+                }
+            });
+        }
+
+        function toggleMoodTag(tag) {
+            const mood = tag.dataset.mood;
+            if (tag.classList.contains('active')) {
+                tag.classList.remove('active');
+                selectedMoods = selectedMoods.filter(m => m !== mood);
+            } else {
+                tag.classList.add('active');
+                selectedMoods.push(mood);
+            }
+        }
+
+        function handlePhotoUpload(event, type) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const photoData = e.target.result;
+                    if (type === 'kids') {
+                        kidsPhotoData = photoData;
+                        document.getElementById('kidsPhotoImg').src = photoData;
+                        document.getElementById('kidsPhotoPreview').classList.add('has-photo');
+                    } else {
+                        selfPhotoData = photoData;
+                        document.getElementById('selfPhotoImg').src = photoData;
+                        document.getElementById('selfPhotoPreview').classList.add('has-photo');
+                    }
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function removePhoto(type) {
+            if (type === 'kids') {
+                kidsPhotoData = null;
+                document.getElementById('kidsPhotoPreview').classList.remove('has-photo');
+                document.getElementById('kidsPhoto').value = '';
+            } else {
+                selfPhotoData = null;
+                document.getElementById('selfPhotoPreview').classList.remove('has-photo');
+                document.getElementById('selfPhoto').value = '';
+            }
+        }
+
+        function startVoiceInput(textareaId, btnId) {
+            if (!recognition) {
+                showMessage('Voice input is not supported in your browser', 'error');
+                return;
+            }
+
+            const textarea = document.getElementById(textareaId);
+            const btn = document.getElementById(btnId);
+
+            currentVoiceInput = textarea;
+            currentVoiceInput.dataset.voiceBtn = btnId;
+
+            btn.classList.add('recording');
+            recognition.start();
+        }
+
+        async function saveEntry() {
+            const kidsText = document.getElementById('kidsText').value.trim();
+            const selfText = document.getElementById('selfText').value.trim();
+            const promptAnswer = document.getElementById('promptAnswer').value.trim();
+
+            if (!currentRating && !kidsText && !selfText && !promptAnswer) {
+                showMessage('Please add at least some content to save your entry', 'error');
+                return;
+            }
+
+            const dateToSave = editingDate || new Date().toDateString();
+            const entry = {
+                date: dateToSave,
+                timestamp: new Date().toISOString(),
+                rating: currentRating,
+                kidsText,
+                kidsPhoto: kidsPhotoData,
+                selfText,
+                selfPhoto: selfPhotoData,
+                moods: selectedMoods,
+                promptAnswer,
+                promptQuestion: document.getElementById('dailyPrompt').style.display !== 'none'
+                    ? document.getElementById('promptQuestion').textContent
+                    : null
+            };
+
+            // Save to IndexedDB
+            await saveEntryToDB(dateToSave, entry);
+
+            // Update last prompt date if prompt was shown
+            if (entry.promptQuestion && !editingDate) {
+                await saveSettingToDB('lastPromptDate', dateToSave);
+            }
+
+            showMessage(editingDate ? '✨ Entry updated successfully!' : '✨ Entry saved successfully!', 'success');
+
+            // Update streak calendar
+            await updateStreakCalendar();
+
+            if (editingDate) {
+                cancelEdit();
+            }
+        }
+
+        async function editEntry(dateStr) {
+            editingDate = dateStr;
+            const entry = await getEntryFromDB(dateStr);
+
+            if (!entry) return;
+
+            // Switch to daily view
+            await switchView('daily');
+
+            // Update UI to show editing mode
+            const date = new Date(dateStr);
+            document.getElementById('currentDate').textContent = date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+            document.getElementById('currentDay').textContent = date.toLocaleDateString('en-US', { weekday: 'long' });
+            document.getElementById('editingBadge').style.display = 'block';
+
+            // Load entry data
+            if (entry.rating) {
+                setMoodRating(entry.rating);
+            }
+
+            document.getElementById('kidsText').value = entry.kidsText || '';
+            document.getElementById('selfText').value = entry.selfText || '';
+            document.getElementById('promptAnswer').value = entry.promptAnswer || '';
+
+            if (entry.kidsPhoto) {
+                kidsPhotoData = entry.kidsPhoto;
+                document.getElementById('kidsPhotoImg').src = entry.kidsPhoto;
+                document.getElementById('kidsPhotoPreview').classList.add('has-photo');
+            }
+
+            if (entry.selfPhoto) {
+                selfPhotoData = entry.selfPhoto;
+                document.getElementById('selfPhotoImg').src = entry.selfPhoto;
+                document.getElementById('selfPhotoPreview').classList.add('has-photo');
+            }
+
+            if (entry.moods) {
+                selectedMoods = [...entry.moods];
+                document.querySelectorAll('.mood-tag').forEach(tag => {
+                    if (selectedMoods.includes(tag.dataset.mood)) {
+                        tag.classList.add('active');
+                    } else {
+                        tag.classList.remove('active');
+                    }
+                });
+            }
+
+            if (entry.promptQuestion) {
+                document.getElementById('promptQuestion').textContent = entry.promptQuestion;
+                document.getElementById('dailyPrompt').style.display = 'block';
+            }
+
+            // Scroll to top
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        async function cancelEdit() {
+            editingDate = null;
+            document.getElementById('editingBadge').style.display = 'none';
+            updateCurrentDate();
+            await loadTodayEntry();
+        }
+
+        async function loadTodayEntry() {
+            const today = new Date().toDateString();
+            const entry = await getEntryFromDB(today);
+
+            // Clear form first
+            clearForm();
+
+            if (entry) {
+                // Load existing entry
+                if (entry.rating) {
+                    setMoodRating(entry.rating);
+                }
+
+                document.getElementById('kidsText').value = entry.kidsText || '';
+                document.getElementById('selfText').value = entry.selfText || '';
+                document.getElementById('promptAnswer').value = entry.promptAnswer || '';
+
+                if (entry.kidsPhoto) {
+                    kidsPhotoData = entry.kidsPhoto;
+                    document.getElementById('kidsPhotoImg').src = entry.kidsPhoto;
+                    document.getElementById('kidsPhotoPreview').classList.add('has-photo');
+                }
+
+                if (entry.selfPhoto) {
+                    selfPhotoData = entry.selfPhoto;
+                    document.getElementById('selfPhotoImg').src = entry.selfPhoto;
+                    document.getElementById('selfPhotoPreview').classList.add('has-photo');
+                }
+
+                if (entry.moods) {
+                    selectedMoods = entry.moods;
+                    document.querySelectorAll('.mood-tag').forEach(tag => {
+                        if (selectedMoods.includes(tag.dataset.mood)) {
+                            tag.classList.add('active');
+                        }
+                    });
+                }
+            }
+        }
+
+        function showMessage(message, type) {
+            const container = document.getElementById('successMessage');
+            container.innerHTML = `<div class="success-message">${message}</div>`;
+
+            setTimeout(() => {
+                container.innerHTML = '';
+            }, 3000);
+        }
+
+        async function switchView(view) {
+            currentView = view;
+
+            // Update nav tabs
+            document.querySelectorAll('.nav-tab').forEach(tab => {
+                tab.classList.toggle('active', tab.dataset.view === view);
+            });
+
+            // Update view containers
+            document.querySelectorAll('.view-container').forEach(container => {
+                container.classList.remove('active');
+            });
+
+            document.getElementById(`${view}-view`).classList.add('active');
+
+            // Load view-specific data
+            if (view === 'timeline') {
+                await loadTimeline('all');
+            } else if (view === 'weekly') {
+                await updateWeeklyView();
+            } else if (view === 'monthly') {
+                await updateMonthlyView();
+            } else if (view === 'daily') {
+                await updateStreakCalendar();
+            }
+        }
+
+        async function loadTimeline(filter) {
+            const entries = await getAllEntriesFromDB();
+            const container = document.getElementById('timelineEntries');
+            const flashbackContainer = document.getElementById('flashbackContainer');
+
+            // Show flashback
+            const flashback = await getRandomFlashback();
+            if (flashback) {
+                flashbackContainer.innerHTML = `
+                    <div class="flashback-card">
+                        <div class="flashback-label">✨ Flashback</div>
+                        <div class="flashback-date">${new Date(flashback.date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</div>
+                        <div class="flashback-text">${flashback.text}</div>
+                    </div>
+                `;
+            } else {
+                flashbackContainer.innerHTML = '';
+            }
+
+            // Filter entries
+            let filteredEntries = Object.values(entries);
+            const now = new Date();
+
+            if (filter === 'week') {
+                const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+                filteredEntries = filteredEntries.filter(e => new Date(e.date) >= weekAgo);
+            } else if (filter === 'month') {
+                const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+                filteredEntries = filteredEntries.filter(e => new Date(e.date) >= monthAgo);
+            }
+
+            // Sort by date (newest first)
+            filteredEntries.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+            if (filteredEntries.length === 0) {
+                container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📝</div><p>No entries yet. Start writing your first moment!</p></div>';
+                return;
+            }
+
+            container.innerHTML = filteredEntries.map(entry => {
+                const date = new Date(entry.date);
+                const specialMoment = entry.kidsText || entry.selfText || entry.promptAnswer || '';
+                const photo = entry.kidsPhoto || entry.selfPhoto;
+                const moodColor = entry.moods && entry.moods.length > 0
+                    ? `var(--mood-${entry.moods[0]})`
+                    : 'var(--color-primary)';
+
+                return `
+                    <div class="moment-card" style="border-left-color: ${moodColor}" onclick="editEntry('${entry.date}')">
+                        <div class="moment-date">${date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</div>
+                        ${entry.rating ? `
+                            <div class="moment-rating">
+                                ${'⭐'.repeat(entry.rating)}
+                            </div>
+                        ` : ''}
+                        ${entry.kidsText ? `<div class="moment-text"><strong>Kids:</strong> ${entry.kidsText}</div>` : ''}
+                        ${entry.selfText ? `<div class="moment-text"><strong>Self:</strong> ${entry.selfText}</div>` : ''}
+                        ${entry.promptAnswer && entry.promptQuestion ? `
+                            <div class="moment-text">
+                                <strong>${entry.promptQuestion}</strong><br>
+                                ${entry.promptAnswer}
+                            </div>
+                        ` : ''}
+                        ${entry.moods && entry.moods.length > 0 ? `
+                            <div class="moment-moods">
+                                ${entry.moods.map(mood => `
+                                    <span class="moment-mood-badge" style="background: var(--mood-${mood}); color: white;">
+                                        ${mood}
+                                    </span>
+                                `).join('')}
+                            </div>
+                        ` : ''}
+                        ${photo ? `
+                            <div class="moment-photo">
+                                <img src="${photo}" alt="Moment photo" onclick="event.stopPropagation(); showPhotoModal('${photo}')">
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+            }).join('');
+        }
+
+        async function getRandomFlashback() {
+            const entriesObj = await getAllEntriesFromDB();
+            const entries = Object.values(entriesObj);
+            const today = new Date().toDateString();
+            const oldEntries = entries.filter(e => e.date !== today && new Date(e.date) < new Date());
+
+            if (oldEntries.length === 0) return null;
+
+            const random = oldEntries[Math.floor(Math.random() * oldEntries.length)];
+            const text = random.kidsText || random.selfText || random.promptAnswer;
+
+            return text ? { date: random.date, text } : null;
+        }
+
+        async function updateWeeklyView() {
+            const entriesObj = await getAllEntriesFromDB();
+            const entries = Object.values(entriesObj);
+            const now = new Date();
+            const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+            const weekEntries = entries.filter(e => new Date(e.date) >= weekAgo);
+
+            // Average mood
+            const avgMood = weekEntries.length > 0
+                ? (weekEntries.reduce((sum, e) => sum + (e.rating || 0), 0) / weekEntries.filter(e => e.rating).length).toFixed(1)
+                : '-';
+            document.getElementById('weeklyAvgMood').textContent = avgMood !== 'NaN' ? `${avgMood} ⭐` : '-';
+            document.getElementById('weeklyEntryCount').textContent = weekEntries.length;
+
+            // Word cloud
+            const words = extractWords(weekEntries);
+            const wordCloudEl = document.getElementById('weeklyWordCloud');
+            if (words.length > 0) {
+                wordCloudEl.innerHTML = words.slice(0, 15).map(([word, count]) => {
+                    const size = Math.min(0.8 + count * 0.1, 1.5);
+                    return `<span class="word-cloud-item" style="font-size: ${size}rem">${word}</span>`;
+                }).join('');
+            } else {
+                wordCloudEl.innerHTML = '<p style="color: var(--color-text-secondary); text-align: center;">No words yet this week</p>';
+            }
+
+            // Photos
+            const photos = weekEntries.flatMap(e => [e.kidsPhoto, e.selfPhoto]).filter(Boolean);
+            const photosEl = document.getElementById('weeklyPhotos');
+            if (photos.length > 0) {
+                photosEl.innerHTML = photos.map(photo => `
+                    <div class="photo-grid-item" onclick="showPhotoModal('${photo}')">
+                        <img src="${photo}" alt="Week photo">
+                    </div>
+                `).join('');
+            } else {
+                photosEl.innerHTML = '<p style="color: var(--color-text-secondary); text-align: center; padding: 2rem;">No photos this week</p>';
+            }
+        }
+
+        async function updateMonthlyView() {
+            const now = new Date();
+            const targetMonth = new Date(now.getFullYear(), now.getMonth() + currentMonthOffset, 1);
+            const monthName = targetMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+            document.getElementById('currentMonth').textContent = monthName;
+
+            const entriesObj = await getAllEntriesFromDB();
+            const entries = Object.values(entriesObj);
+            const monthEntries = entries.filter(e => {
+                const entryDate = new Date(e.date);
+                return entryDate.getMonth() === targetMonth.getMonth() &&
+                       entryDate.getFullYear() === targetMonth.getFullYear();
+            });
+
+            // Statistics
+            const avgMood = monthEntries.length > 0
+                ? (monthEntries.reduce((sum, e) => sum + (e.rating || 0), 0) / monthEntries.filter(e => e.rating).length).toFixed(1)
+                : '-';
+            document.getElementById('monthlyAvgMood').textContent = avgMood !== 'NaN' ? `${avgMood} ⭐` : '-';
+            document.getElementById('monthlyEntryCount').textContent = monthEntries.length;
+
+            // Best day
+            const bestEntry = monthEntries.reduce((best, e) =>
+                (e.rating || 0) > (best.rating || 0) ? e : best
+            , {});
+            document.getElementById('monthlyBestDay').textContent = bestEntry.rating
+                ? new Date(bestEntry.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+                : '-';
+
+            // Mood chart
+            const chartEl = document.getElementById('monthlyMoodChart');
+            const labelsEl = document.getElementById('monthlyMoodLabels');
+            const daysInMonth = new Date(targetMonth.getFullYear(), targetMonth.getMonth() + 1, 0).getDate();
+            const weeks = Math.ceil(daysInMonth / 7);
+
+            const weeklyMoods = [];
+            for (let i = 0; i < weeks; i++) {
+                const weekStart = i * 7 + 1;
+                const weekEnd = Math.min((i + 1) * 7, daysInMonth);
+                const weekEntries = monthEntries.filter(e => {
+                    const day = new Date(e.date).getDate();
+                    return day >= weekStart && day <= weekEnd;
+                });
+                const weekAvg = weekEntries.length > 0
+                    ? weekEntries.reduce((sum, e) => sum + (e.rating || 0), 0) / weekEntries.filter(e => e.rating).length
+                    : 0;
+                weeklyMoods.push(weekAvg);
+            }
+
+            const maxMood = Math.max(...weeklyMoods, 5);
+            chartEl.innerHTML = weeklyMoods.map((mood, i) => {
+                const height = (mood / maxMood) * 100;
+                return `<div class="chart-bar" style="height: ${height}%" data-value="${mood.toFixed(1)}"></div>`;
+            }).join('');
+
+            labelsEl.innerHTML = weeklyMoods.map((_, i) => `
+                <div class="chart-label">Week ${i + 1}</div>
+            `).join('');
+
+            // Photos
+            const photos = monthEntries.flatMap(e => [e.kidsPhoto, e.selfPhoto]).filter(Boolean);
+            const photosEl = document.getElementById('monthlyPhotos');
+            if (photos.length > 0) {
+                photosEl.innerHTML = photos.map(photo => `
+                    <div class="photo-grid-item" onclick="showPhotoModal('${photo}')">
+                        <img src="${photo}" alt="Month photo">
+                    </div>
+                `).join('');
+            } else {
+                photosEl.innerHTML = '<p style="color: var(--color-text-secondary); text-align: center; padding: 2rem;">No photos this month</p>';
+            }
+        }
+
+        function extractWords(entries) {
+            const allText = entries.map(e => [e.kidsText, e.selfText, e.promptAnswer].filter(Boolean).join(' ')).join(' ');
+            const words = allText.toLowerCase()
+                .replace(/[^\w\s]/g, '')
+                .split(/\s+/)
+                .filter(word => word.length > 3 && !['that', 'this', 'with', 'have', 'from', 'were', 'been', 'they', 'what', 'when', 'where', 'while', 'their', 'there'].includes(word));
+
+            const wordCount = {};
+            words.forEach(word => {
+                wordCount[word] = (wordCount[word] || 0) + 1;
+            });
+
+            return Object.entries(wordCount)
+                .sort((a, b) => b[1] - a[1]);
+        }
+
+        function showPhotoModal(photoSrc) {
+            document.getElementById('modalPhoto').src = photoSrc;
+            document.getElementById('photoModal').classList.add('active');
+        }
+    </script>
+    </body>
 </html>

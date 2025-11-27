@@ -1,4 +1,4 @@
-updates 
+updates 2
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -1954,7 +1954,7 @@ updates
             const promptShownToday = lastPromptDate === today;
 
             // Show prompt randomly (30% chance) if not shown today
-            if (!promptShownToday && Math.random() < 0.3) {
+            if (!promptShownToday && Math.random() < 0.99) {
                 const randomPrompt = prompts[Math.floor(Math.random() * prompts.length)];
                 document.getElementById('promptQuestion').textContent = randomPrompt;
                 document.getElementById('dailyPrompt').style.display = 'block';

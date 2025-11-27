@@ -1,4 +1,4 @@
-
+updates 
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -1523,7 +1523,6 @@
             "How did you show yourself kindness?",
             "What moment would you relive?",
             "What made you proud today?"
-            "What would young Sam be proud of you today"
         ];
 
         // Initialize IndexedDB
@@ -1954,8 +1953,8 @@
             const lastPromptDate = await getSettingFromDB('lastPromptDate');
             const promptShownToday = lastPromptDate === today;
 
-            // Show prompt randomly (1000% chance) if not shown today
-            if (!promptShownToday && Math.random() < 0.99) {
+            // Show prompt randomly (30% chance) if not shown today
+            if (!promptShownToday && Math.random() < 0.3) {
                 const randomPrompt = prompts[Math.floor(Math.random() * prompts.length)];
                 document.getElementById('promptQuestion').textContent = randomPrompt;
                 document.getElementById('dailyPrompt').style.display = 'block';

@@ -1306,16 +1306,7 @@ updates
                     </div>
                 </div>
 
-                <!-- Daily Prompt (shows occasionally) -->
-                <div class="daily-prompt" id="dailyPrompt" style="display: none;">
-                    <div class="prompt-question" id="promptQuestion"></div>
-                    <div class="input-group">
-                        <div class="input-header">
-                            <button class="small-icon-btn" id="promptVoiceBtn" title="Voice input">🎤</button>
-                        </div>
-                        <textarea id="promptAnswer" placeholder="Your thoughts..."></textarea>
-                    </div>
-                </div>
+
 
                 <!-- Mood Rating -->
                 <div class="section-card">
@@ -1369,7 +1360,16 @@ updates
                         </div>
                     </div>
                 </div>
-
+                <!-- Daily Prompt (shows occasionally) -->
+                <div class="daily-prompt" id="dailyPrompt" style="display: none;">
+                    <div class="prompt-question" id="promptQuestion"></div>
+                    <div class="input-group">
+                        <div class="input-header">
+                            <button class="small-icon-btn" id="promptVoiceBtn" title="Voice input">🎤</button>
+                        </div>
+                        <textarea id="promptAnswer" placeholder="Your thoughts..."></textarea>
+                    </div>
+                </div>
                 <!-- Mood Tags -->
                 <div class="section-card">
                     <h2 class="section-title">Today I felt...</h2>
@@ -1953,8 +1953,8 @@ updates
             const lastPromptDate = await getSettingFromDB('lastPromptDate');
             const promptShownToday = lastPromptDate === today;
 
-            // Show prompt randomly (30% chance) if not shown today
-            if (!promptShownToday && Math.random() < 0.3) {
+            // Show prompt randomly (100% chance) if not shown today
+            if (!promptShownToday && Math.random() < 0.999) {
                 const randomPrompt = prompts[Math.floor(Math.random() * prompts.length)];
                 document.getElementById('promptQuestion').textContent = randomPrompt;
                 document.getElementById('dailyPrompt').style.display = 'block';

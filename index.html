@@ -208,6 +208,7 @@ updates
             justify-content: space-between;
             align-items: center;
             margin-bottom: 1rem;
+            gap: 0.5rem;
         }
 
         .streak-info {
@@ -229,6 +230,32 @@ updates
             opacity: 0.9;
         }
 
+        .week-nav-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            width: 2rem;
+            height: 2rem;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .week-nav-btn:hover:not(:disabled) {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(1.1);
+        }
+
+        .week-nav-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
         .date-picker-btn {
             background: rgba(255, 255, 255, 0.2);
             border: 1px solid rgba(255, 255, 255, 0.3);
@@ -247,6 +274,14 @@ updates
         .date-picker-btn:hover {
             background: rgba(255, 255, 255, 0.3);
             transform: translateY(-2px);
+        }
+
+        .week-indicator {
+            text-align: center;
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 0.75rem;
+            margin-bottom: 0.75rem;
+            font-weight: 500;
         }
 
         .week-days {
@@ -703,6 +738,52 @@ updates
             to {
                 opacity: 1;
                 transform: translateX(-50%) translateY(0);
+            }
+        }
+
+        /* Celebration Animation */
+        .celebration-overlay {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 9999;
+            overflow: hidden;
+        }
+
+        .confetti {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            animation: confettiFall 3s ease-out forwards;
+        }
+
+        @keyframes confettiFall {
+            0% {
+                transform: translateY(-100vh) rotate(0deg);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(100vh) rotate(720deg);
+                opacity: 0;
+            }
+        }
+
+        .save-btn.celebrating {
+            animation: celebrationPulse 0.6s ease;
+        }
+
+        @keyframes celebrationPulse {
+            0%, 100% {
+                transform: scale(1);
+            }
+            25% {
+                transform: scale(1.1) rotate(-5deg);
+            }
+            50% {
+                transform: scale(1.15) rotate(5deg);
+            }
+            75% {
+                transform: scale(1.1) rotate(-3deg);
             }
         }
 
@@ -1199,11 +1280,14 @@ updates
                                 <div style="font-size: 0.75rem; opacity: 0.8;">Keep it going!</div>
                             </div>
                         </div>
+                        <button class="week-nav-btn" id="prevWeek" title="Previous week">◀</button>
+                        <button class="week-nav-btn" id="nextWeek" title="Next week">▶</button>
                         <label for="datePicker" class="date-picker-btn">
                             📅 Pick Date
                         </label>
                         <input type="date" id="datePicker" max="">
                     </div>
+                    <div class="week-indicator" id="weekIndicator">This Week</div>
                     <div class="week-days" id="weekDays">
                         <!-- Days will be populated by JavaScript -->
                     </div>
@@ -1421,6 +1505,7 @@ updates
         let selfPhotoData = null;
         let currentView = 'daily';
         let currentMonthOffset = 0;
+        let weekOffset = 0;
         let recognition = null;
         let currentVoiceInput = null;
         let db = null;
@@ -1561,12 +1646,38 @@ updates
             document.getElementById('streakCount').textContent = streak;
 
             const weekDaysContainer = document.getElementById('weekDays');
+            const weekIndicator = document.getElementById('weekIndicator');
             const today = new Date();
             const dayOfWeek = today.getDay();
-            const startOfWeek = new Date(today);
-            startOfWeek.setDate(today.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1));
+
+            // Calculate the start of the current week
+            const currentWeekStart = new Date(today);
+            currentWeekStart.setDate(today.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1));
+
+            // Apply week offset
+            const startOfWeek = new Date(currentWeekStart);
+            startOfWeek.setDate(currentWeekStart.getDate() + (weekOffset * 7));
 
             const dayLabels = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+
+            // Update week indicator
+            if (weekOffset === 0) {
+                weekIndicator.textContent = 'This Week';
+            } else if (weekOffset === -1) {
+                weekIndicator.textContent = 'Last Week';
+            } else if (weekOffset === 1) {
+                weekIndicator.textContent = 'Next Week';
+            } else if (weekOffset < 0) {
+                weekIndicator.textContent = `${Math.abs(weekOffset)} weeks ago`;
+            } else {
+                weekIndicator.textContent = `${weekOffset} weeks ahead`;
+            }
+
+            // Update navigation buttons state
+            const nextWeekBtn = document.getElementById('nextWeek');
+            const endOfDisplayWeek = new Date(startOfWeek);
+            endOfDisplayWeek.setDate(startOfWeek.getDate() + 6);
+            nextWeekBtn.disabled = endOfDisplayWeek >= today;
 
             weekDaysContainer.innerHTML = '';
 
@@ -1576,6 +1687,7 @@ updates
                 const dateStr = date.toDateString();
                 const hasEntry = entries[dateStr];
                 const isToday = date.toDateString() === today.toDateString();
+                const isFuture = date > today;
 
                 const dayDiv = document.createElement('div');
                 dayDiv.className = 'week-day';
@@ -1584,9 +1696,12 @@ updates
                 if (hasEntry) dotClasses.push('completed');
                 if (isToday) dotClasses.push('today');
 
+                // Add opacity for future dates
+                const opacity = isFuture ? 'opacity: 0.4;' : '';
+
                 dayDiv.innerHTML = `
                     <div class="week-day-label">${dayLabels[i]}</div>
-                    <div class="${dotClasses.join(' ')}" onclick="loadDateEntry('${dateStr}')">
+                    <div class="${dotClasses.join(' ')}" onclick="${!isFuture ? `loadDateEntry('${dateStr}')` : ''}" style="${opacity}${isFuture ? 'cursor: default;' : ''}">
                         ${!hasEntry && !isToday ? `<span class="week-day-number">${date.getDate()}</span>` : ''}
                     </div>
                 `;
@@ -1811,6 +1926,19 @@ updates
                 loadDateEntry(selectedDate.toDateString());
                 e.target.value = ''; // Reset picker
             });
+
+            // Week navigation buttons
+            document.getElementById('prevWeek').addEventListener('click', async () => {
+                weekOffset--;
+                await updateStreakCalendar();
+            });
+
+            document.getElementById('nextWeek').addEventListener('click', async () => {
+                if (weekOffset < 0) {
+                    weekOffset++;
+                    await updateStreakCalendar();
+                }
+            });
         }
 
         function updateCurrentDate() {
@@ -1937,6 +2065,9 @@ updates
                 await saveSettingToDB('lastPromptDate', dateToSave);
             }
 
+            // Trigger celebration animation
+            triggerCelebration();
+
             showMessage(editingDate ? '✨ Entry updated successfully!' : '✨ Entry saved successfully!', 'success');
 
             // Update streak calendar
@@ -1945,6 +2076,51 @@ updates
             if (editingDate) {
                 cancelEdit();
             }
+        }
+
+        function triggerCelebration() {
+            const saveBtn = document.getElementById('saveEntry');
+
+            // Animate save button
+            saveBtn.classList.add('celebrating');
+            setTimeout(() => {
+                saveBtn.classList.remove('celebrating');
+            }, 600);
+
+            // Create confetti overlay
+            const overlay = document.createElement('div');
+            overlay.className = 'celebration-overlay';
+            document.body.appendChild(overlay);
+
+            // Generate confetti pieces
+            const colors = ['#f6c85f', '#6eb5a0', '#e89e6f', '#f19c79', '#ffd166', '#a8c5b9', '#e5a3b4'];
+            const confettiCount = 50;
+
+            for (let i = 0; i < confettiCount; i++) {
+                const confetti = document.createElement('div');
+                confetti.className = 'confetti';
+
+                // Random positioning and styling
+                const left = Math.random() * 100;
+                const delay = Math.random() * 0.5;
+                const duration = 2 + Math.random() * 1;
+                const color = colors[Math.floor(Math.random() * colors.length)];
+                const size = 8 + Math.random() * 6;
+
+                confetti.style.left = `${left}%`;
+                confetti.style.backgroundColor = color;
+                confetti.style.width = `${size}px`;
+                confetti.style.height = `${size}px`;
+                confetti.style.animationDelay = `${delay}s`;
+                confetti.style.animationDuration = `${duration}s`;
+
+                overlay.appendChild(confetti);
+            }
+
+            // Remove overlay after animation completes
+            setTimeout(() => {
+                overlay.remove();
+            }, 3500);
         }
 
         async function editEntry(dateStr) {
@@ -2005,9 +2181,11 @@ updates
 
         async function cancelEdit() {
             editingDate = null;
+            weekOffset = 0; // Reset to current week
             document.getElementById('editingBadge').style.display = 'none';
             updateCurrentDate();
             await loadTodayEntry();
+            await updateStreakCalendar();
         }
 
         async function loadTodayEntry() {

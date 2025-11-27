@@ -1,4 +1,4 @@
-updates 2
+updates 
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -1303,6 +1303,17 @@ updates 2
                         <button id="cancelEdit" style="background: var(--color-border); border: none; padding: 0.25rem 0.75rem; border-radius: 1rem; font-size: 0.85rem; margin-left: 0.5rem; cursor: pointer;">
                             Cancel
                         </button>
+                    </div>
+                </div>
+
+                <!-- Daily Prompt (shows occasionally) -->
+                <div class="daily-prompt" id="dailyPrompt" style="display: none;">
+                    <div class="prompt-question" id="promptQuestion"></div>
+                    <div class="input-group">
+                        <div class="input-header">
+                            <button class="small-icon-btn" id="promptVoiceBtn" title="Voice input">🎤</button>
+                        </div>
+                        <textarea id="promptAnswer" placeholder="Your thoughts..."></textarea>
                     </div>
                 </div>
 

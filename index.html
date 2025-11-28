@@ -2423,14 +2423,6 @@ updates
             document.getElementById('monthlyAvgMood').textContent = avgMood !== 'NaN' ? `${avgMood} ⭐` : '-';
             document.getElementById('monthlyEntryCount').textContent = monthEntries.length;
 
-            // Best day
-            const bestEntry = monthEntries.reduce((best, e) =>
-                (e.rating || 0) > (best.rating || 0) ? e : best
-            , {});
-            document.getElementById('monthlyBestDay').textContent = bestEntry.rating
-                ? new Date(bestEntry.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
-                : '-';
-
             // Mood chart
             const chartEl = document.getElementById('monthlyMoodChart');
             const labelsEl = document.getElementById('monthlyMoodLabels');

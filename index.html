@@ -1,4 +1,4 @@
-updates 2
+updates 
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -670,18 +670,19 @@ updates 2
 
         /* Daily Prompt */
         .daily-prompt {
-            background: linear-gradient(135deg, var(--color-primary), var(--color-accent));
-            color: white;
-            padding: 1.5rem;
-            border-radius: 1.25rem;
-            margin-bottom: 1.5rem;
+            margin-top: 1rem;
         }
 
         .prompt-question {
             font-family: 'Fraunces', serif;
             font-style: italic;
-            font-size: 1.1rem;
+            font-size: 1rem;
             margin-bottom: 1rem;
+            color: var(--color-primary);
+            padding: 1rem;
+            background: var(--color-bg);
+            border-radius: 0.75rem;
+            border-left: 3px solid var(--color-primary);
         }
 
         /* Save Button */
@@ -1282,10 +1283,6 @@ updates 2
                         </div>
                         <button class="week-nav-btn" id="prevWeek" title="Previous week">◀</button>
                         <button class="week-nav-btn" id="nextWeek" title="Next week">▶</button>
-                        <label for="datePicker" class="date-picker-btn">
-                            📅 Pick Date
-                        </label>
-                        <input type="date" id="datePicker" max="">
                     </div>
                     <div class="week-indicator" id="weekIndicator">This Week</div>
                     <div class="week-days" id="weekDays">
@@ -1303,17 +1300,6 @@ updates 2
                         <button id="cancelEdit" style="background: var(--color-border); border: none; padding: 0.25rem 0.75rem; border-radius: 1rem; font-size: 0.85rem; margin-left: 0.5rem; cursor: pointer;">
                             Cancel
                         </button>
-                    </div>
-                </div>
-
-                <!-- Daily Prompt (shows occasionally) -->
-                <div class="daily-prompt" id="dailyPrompt" style="display: none;">
-                    <div class="prompt-question" id="promptQuestion"></div>
-                    <div class="input-group">
-                        <div class="input-header">
-                            <button class="small-icon-btn" id="promptVoiceBtn" title="Voice input">🎤</button>
-                        </div>
-                        <textarea id="promptAnswer" placeholder="Your thoughts..."></textarea>
                     </div>
                 </div>
 
@@ -1366,6 +1352,23 @@ updates 2
                         <div class="photo-preview" id="selfPhotoPreview">
                             <img id="selfPhotoImg" alt="Self care moment">
                             <button class="remove-photo" id="removeSelfPhoto">✕</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Daily Prompt -->
+                <div class="section-card">
+                    <h2 class="section-title">Daily Reflection</h2>
+                    <div class="daily-prompt" id="dailyPrompt">
+                        <div class="prompt-question" id="promptQuestion"></div>
+                        <div class="input-group">
+                            <div class="input-header">
+                                <span class="input-label">Your thoughts</span>
+                                <div class="input-actions">
+                                    <button class="small-icon-btn" id="promptVoiceBtn" title="Voice input">🎤</button>
+                                </div>
+                            </div>
+                            <textarea id="promptAnswer" placeholder="Write your answer here..."></textarea>
                         </div>
                     </div>
                 </div>
@@ -1751,8 +1754,6 @@ updates 2
             document.getElementById('selfPhotoPreview').classList.remove('has-photo');
             document.getElementById('kidsPhoto').value = '';
             document.getElementById('selfPhoto').value = '';
-
-            document.getElementById('dailyPrompt').style.display = 'none';
         }
 
         // Initialize app
@@ -1920,13 +1921,6 @@ updates 2
                 cancelEdit();
             });
 
-            // Date picker
-            document.getElementById('datePicker').addEventListener('change', (e) => {
-                const selectedDate = new Date(e.target.value + 'T00:00:00');
-                loadDateEntry(selectedDate.toDateString());
-                e.target.value = ''; // Reset picker
-            });
-
             // Week navigation buttons
             document.getElementById('prevWeek').addEventListener('click', async () => {
                 weekOffset--;
@@ -1951,13 +1945,20 @@ updates 2
         async function checkForPrompt() {
             const today = new Date().toDateString();
             const lastPromptDate = await getSettingFromDB('lastPromptDate');
-            const promptShownToday = lastPromptDate === today;
+            const lastPromptText = await getSettingFromDB('lastPromptText');
 
-            // Show prompt randomly (30% chance) if not shown today
-            if (!promptShownToday && Math.random() < 0.99) {
+            // If it's a new day, pick a new random prompt
+            if (lastPromptDate !== today) {
                 const randomPrompt = prompts[Math.floor(Math.random() * prompts.length)];
                 document.getElementById('promptQuestion').textContent = randomPrompt;
-                document.getElementById('dailyPrompt').style.display = 'block';
+                await saveSettingToDB('lastPromptText', randomPrompt);
+            } else if (lastPromptText) {
+                // Show the same prompt for today
+                document.getElementById('promptQuestion').textContent = lastPromptText;
+            } else {
+                // Fallback to random prompt
+                const randomPrompt = prompts[Math.floor(Math.random() * prompts.length)];
+                document.getElementById('promptQuestion').textContent = randomPrompt;
             }
         }
 
@@ -2052,17 +2053,16 @@ updates 2
                 selfPhoto: selfPhotoData,
                 moods: selectedMoods,
                 promptAnswer,
-                promptQuestion: document.getElementById('dailyPrompt').style.display !== 'none'
-                    ? document.getElementById('promptQuestion').textContent
-                    : null
+                promptQuestion: document.getElementById('promptQuestion').textContent
             };
 
             // Save to IndexedDB
             await saveEntryToDB(dateToSave, entry);
 
-            // Update last prompt date if prompt was shown
-            if (entry.promptQuestion && !editingDate) {
+            // Update last prompt date
+            if (!editingDate) {
                 await saveSettingToDB('lastPromptDate', dateToSave);
+                await saveSettingToDB('lastPromptText', entry.promptQuestion);
             }
 
             // Trigger celebration animation
@@ -2172,7 +2172,9 @@ updates 2
 
             if (entry.promptQuestion) {
                 document.getElementById('promptQuestion').textContent = entry.promptQuestion;
-                document.getElementById('dailyPrompt').style.display = 'block';
+            } else {
+                // If no prompt saved, show today's prompt
+                await checkForPrompt();
             }
 
             // Scroll to top

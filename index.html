@@ -966,6 +966,72 @@ updates
             opacity: 1;
         }
 
+        /* Mood Balance */
+        .mood-balance-bars {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .mood-balance-bar {
+            flex: 1;
+            text-align: center;
+        }
+
+        .mood-balance-label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .mood-balance-visual {
+            height: 120px;
+            background: var(--color-bg);
+            border-radius: 0.75rem;
+            overflow: hidden;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+        }
+
+        .mood-balance-fill {
+            width: 100%;
+            transition: height 0.5s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+            font-size: 1.25rem;
+            font-family: 'Fraunces', serif;
+        }
+
+        .mood-balance-fill.positive {
+            background: linear-gradient(135deg, #6eb5a0, #f6c85f);
+        }
+
+        .mood-balance-fill.negative {
+            background: linear-gradient(135deg, #9eb3c8, #c4918b);
+        }
+
+        .mood-balance-emoji {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .mood-sentiment-message {
+            text-align: center;
+            padding: 1rem;
+            background: var(--color-bg);
+            border-radius: 0.75rem;
+            margin-bottom: 1rem;
+            font-style: italic;
+            color: var(--color-text-secondary);
+        }
+
         .photo-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
@@ -1547,7 +1613,8 @@ updates
                 </div>
 
                 <div class="dashboard-card">
-                    <h2 class="dashboard-title">Most Used Words</h2>
+                    <h2 class="dashboard-title">Mood Balance</h2>
+                    <div id="weeklyMoodBalance"></div>
                     <div class="word-cloud" id="weeklyWordCloud"></div>
                 </div>
 
@@ -1588,6 +1655,12 @@ updates
                 </div>
 
                 <div class="dashboard-card">
+                    <h2 class="dashboard-title">Mood Balance</h2>
+                    <div id="monthlyMoodBalance"></div>
+                    <div class="word-cloud" id="monthlyWordCloud"></div>
+                </div>
+
+                <div class="dashboard-card">
                     <h2 class="dashboard-title">Monthly Photos</h2>
                     <div class="photo-grid" id="monthlyPhotos"></div>
                 </div>
@@ -1619,6 +1692,10 @@ updates
         let currentVoiceInput = null;
         let db = null;
         let editingDate = null;
+
+        // Mood categorization
+        const positiveMoods = ['happy', 'joyful', 'grateful', 'proud', 'motivated', 'energetic', 'peaceful', 'calm', 'excited', 'hopeful', 'loved', 'content', 'inspired'];
+        const negativeMoods = ['tired', 'exhausted', 'anxious', 'stressed', 'overwhelmed', 'frustrated', 'sad', 'lonely', 'worried', 'confused', 'restless'];
 
         // Daily prompts
         const prompts = [
@@ -2490,16 +2567,22 @@ updates
             document.getElementById('weeklyAvgMood').textContent = avgMood !== 'NaN' ? `${avgMood} ⭐` : '-';
             document.getElementById('weeklyEntryCount').textContent = weekEntries.length;
 
-            // Word cloud
-            const words = extractWords(weekEntries);
+            // Mood balance
+            const sentiment = getMoodSentiment(weekEntries);
+            renderMoodBalance(sentiment, 'weeklyMoodBalance');
+
+            // Mood word cloud
+            const moodWords = extractMoodWords(weekEntries);
             const wordCloudEl = document.getElementById('weeklyWordCloud');
-            if (words.length > 0) {
-                wordCloudEl.innerHTML = words.slice(0, 15).map(([word, count]) => {
-                    const size = Math.min(0.8 + count * 0.1, 1.5);
-                    return `<span class="word-cloud-item" style="font-size: ${size}rem">${word}</span>`;
+            if (moodWords.length > 0) {
+                wordCloudEl.innerHTML = moodWords.slice(0, 12).map(([mood, count]) => {
+                    const size = Math.min(0.85 + count * 0.15, 1.6);
+                    const moodColor = `var(--mood-${mood})`;
+                    const emoji = document.querySelector(`[data-mood="${mood}"]`)?.textContent.split(' ')[0] || '';
+                    return `<span class="word-cloud-item" style="font-size: ${size}rem; background: ${moodColor};">${emoji} ${mood} (${count})</span>`;
                 }).join('');
             } else {
-                wordCloudEl.innerHTML = '<p style="color: var(--color-text-secondary); text-align: center;">No words yet this week</p>';
+                wordCloudEl.innerHTML = '<p style="color: var(--color-text-secondary); text-align: center;">No mood data yet this week</p>';
             }
 
             // Photos
@@ -2567,6 +2650,24 @@ updates
                 <div class="chart-label">Week ${i + 1}</div>
             `).join('');
 
+            // Mood balance
+            const sentiment = getMoodSentiment(monthEntries);
+            renderMoodBalance(sentiment, 'monthlyMoodBalance');
+
+            // Mood word cloud
+            const moodWords = extractMoodWords(monthEntries);
+            const wordCloudEl = document.getElementById('monthlyWordCloud');
+            if (moodWords.length > 0) {
+                wordCloudEl.innerHTML = moodWords.slice(0, 15).map(([mood, count]) => {
+                    const size = Math.min(0.85 + count * 0.12, 1.6);
+                    const moodColor = `var(--mood-${mood})`;
+                    const emoji = document.querySelector(`[data-mood="${mood}"]`)?.textContent.split(' ')[0] || '';
+                    return `<span class="word-cloud-item" style="font-size: ${size}rem; background: ${moodColor};">${emoji} ${mood} (${count})</span>`;
+                }).join('');
+            } else {
+                wordCloudEl.innerHTML = '<p style="color: var(--color-text-secondary); text-align: center;">No mood data yet this month</p>';
+            }
+
             // Photos
             const photos = monthEntries.flatMap(e => [e.kidsPhoto, e.selfPhoto]).filter(Boolean);
             const photosEl = document.getElementById('monthlyPhotos');
@@ -2581,20 +2682,90 @@ updates
             }
         }
 
-        function extractWords(entries) {
-            const allText = entries.map(e => [e.kidsText, e.selfText, e.promptAnswer].filter(Boolean).join(' ')).join(' ');
-            const words = allText.toLowerCase()
-                .replace(/[^\w\s]/g, '')
-                .split(/\s+/)
-                .filter(word => word.length > 3 && !['that', 'this', 'with', 'have', 'from', 'were', 'been', 'they', 'what', 'when', 'where', 'while', 'their', 'there'].includes(word));
+        function extractMoodWords(entries) {
+            const moodCount = {};
 
-            const wordCount = {};
-            words.forEach(word => {
-                wordCount[word] = (wordCount[word] || 0) + 1;
+            entries.forEach(entry => {
+                if (entry.moods && entry.moods.length > 0) {
+                    entry.moods.forEach(mood => {
+                        moodCount[mood] = (moodCount[mood] || 0) + 1;
+                    });
+                }
             });
 
-            return Object.entries(wordCount)
+            return Object.entries(moodCount)
                 .sort((a, b) => b[1] - a[1]);
+        }
+
+        function getMoodSentiment(entries) {
+            let positiveCount = 0;
+            let negativeCount = 0;
+
+            entries.forEach(entry => {
+                if (entry.moods && entry.moods.length > 0) {
+                    entry.moods.forEach(mood => {
+                        if (positiveMoods.includes(mood)) {
+                            positiveCount++;
+                        } else if (negativeMoods.includes(mood)) {
+                            negativeCount++;
+                        }
+                    });
+                }
+            });
+
+            return { positiveCount, negativeCount };
+        }
+
+        function renderMoodBalance(sentiment, containerId) {
+            const { positiveCount, negativeCount } = sentiment;
+            const total = positiveCount + negativeCount;
+
+            if (total === 0) {
+                document.getElementById(containerId).innerHTML = `
+                    <p style="color: var(--color-text-secondary); text-align: center; padding: 1rem;">
+                        No mood data yet. Start tracking your feelings!
+                    </p>
+                `;
+                return;
+            }
+
+            const positivePercent = (positiveCount / total) * 100;
+            const negativePercent = (negativeCount / total) * 100;
+
+            let message = '';
+            if (positivePercent > 70) {
+                message = '🌟 Wow! Your vibes have been mostly positive!';
+            } else if (positivePercent > 50) {
+                message = '😊 More positive than negative—keep it up!';
+            } else if (negativePercent > 70) {
+                message = '💙 Tough times lately. Remember to be kind to yourself.';
+            } else {
+                message = '⚖️ A balanced mix of highs and lows—that\'s life!';
+            }
+
+            document.getElementById(containerId).innerHTML = `
+                <div class="mood-sentiment-message">${message}</div>
+                <div class="mood-balance-bars">
+                    <div class="mood-balance-bar">
+                        <div class="mood-balance-emoji">😊</div>
+                        <div class="mood-balance-label" style="color: var(--mood-grateful);">Positive</div>
+                        <div class="mood-balance-visual">
+                            <div class="mood-balance-fill positive" style="height: ${positivePercent}%;">
+                                ${positiveCount}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mood-balance-bar">
+                        <div class="mood-balance-emoji">😔</div>
+                        <div class="mood-balance-label" style="color: var(--mood-stressed);">Challenging</div>
+                        <div class="mood-balance-visual">
+                            <div class="mood-balance-fill negative" style="height: ${negativePercent}%;">
+                                ${negativeCount}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
         }
 
         function showPhotoModal(photoSrc) {

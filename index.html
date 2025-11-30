@@ -1315,6 +1315,172 @@ updates
             }
         }
 
+        /* Achievements */
+        .achievements-btn {
+            position: relative;
+        }
+
+        .achievement-badge {
+            position: absolute;
+            top: -4px;
+            right: -4px;
+            background: linear-gradient(135deg, #f6c85f, #e89e6f);
+            color: white;
+            font-size: 0.65rem;
+            font-weight: 700;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid var(--color-surface);
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        .achievements-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .achievement-card {
+            background: var(--color-bg);
+            border-radius: 1rem;
+            padding: 1.25rem;
+            text-align: center;
+            transition: all 0.3s ease;
+            border: 2px solid var(--color-border);
+        }
+
+        .achievement-card.unlocked {
+            border-color: var(--color-primary);
+            background: linear-gradient(135deg, rgba(212, 132, 92, 0.1), rgba(232, 178, 152, 0.1));
+        }
+
+        .achievement-card.locked {
+            opacity: 0.5;
+            filter: grayscale(100%);
+        }
+
+        .achievement-icon {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+
+        .achievement-name {
+            font-family: 'Fraunces', serif;
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--color-text);
+            margin-bottom: 0.25rem;
+        }
+
+        .achievement-desc {
+            font-size: 0.75rem;
+            color: var(--color-text-secondary);
+            line-height: 1.4;
+        }
+
+        .achievement-progress {
+            margin-top: 0.5rem;
+            font-size: 0.7rem;
+            color: var(--color-primary);
+            font-weight: 600;
+        }
+
+        .achievement-notification {
+            position: fixed;
+            top: 6rem;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(135deg, var(--color-primary), var(--color-accent));
+            color: white;
+            padding: 1.25rem 1.75rem;
+            border-radius: 1.25rem;
+            box-shadow: 0 8px 24px rgba(212, 132, 92, 0.4);
+            z-index: 2000;
+            text-align: center;
+            min-width: 280px;
+            animation: achievementSlideIn 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+
+        @keyframes achievementSlideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-50%) translateY(-50px) scale(0.8);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(-50%) translateY(0) scale(1);
+            }
+        }
+
+        .achievement-notification-icon {
+            font-size: 3rem;
+            margin-bottom: 0.5rem;
+            display: block;
+            animation: bounce 0.6s ease-in-out 0.3s;
+        }
+
+        @keyframes bounce {
+            0%, 100% {
+                transform: translateY(0);
+            }
+            50% {
+                transform: translateY(-10px);
+            }
+        }
+
+        .achievement-notification-title {
+            font-family: 'Fraunces', serif;
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+            opacity: 0.9;
+        }
+
+        .achievement-notification-name {
+            font-family: 'Fraunces', serif;
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+        }
+
+        .achievement-notification-desc {
+            font-size: 0.85rem;
+            opacity: 0.95;
+        }
+
+        .achievements-summary {
+            background: var(--color-bg);
+            padding: 1rem;
+            border-radius: 0.75rem;
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+
+        .achievements-progress-bar {
+            height: 8px;
+            background: var(--color-border);
+            border-radius: 1rem;
+            overflow: hidden;
+            margin: 0.75rem 0;
+        }
+
+        .achievements-progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--color-primary), var(--color-accent));
+            transition: width 0.5s ease;
+        }
+
+        .achievements-stats {
+            font-size: 0.85rem;
+            color: var(--color-text-secondary);
+        }
+
         /* Animated Goose */
         .animated-goose-container {
             position: fixed;
@@ -1429,6 +1595,10 @@ updates
             <div class="header-top">
                 <h1 class="app-title">Goose's Diary 🪿</h1>
                 <div class="header-actions">
+                    <button class="icon-btn achievements-btn" id="achievementsBtn" title="Achievements">
+                        🏆
+                        <span class="achievement-badge" id="achievementBadge" style="display: none;">0</span>
+                    </button>
                     <button class="icon-btn" id="darkModeToggle" title="Toggle dark mode">🌙</button>
                 </div>
             </div>
@@ -1679,6 +1849,25 @@ updates
         </div>
     </div>
 
+    <!-- Achievements Modal -->
+    <div class="modal" id="achievementsModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">🏆 Achievements</h3>
+                <button class="close-modal" id="closeAchievementsModal">✕</button>
+            </div>
+            <div class="achievements-summary">
+                <div class="achievements-stats">
+                    <strong id="unlockedCount">0</strong> of <strong id="totalCount">0</strong> unlocked
+                </div>
+                <div class="achievements-progress-bar">
+                    <div class="achievements-progress-fill" id="achievementsProgressFill" style="width: 0%"></div>
+                </div>
+            </div>
+            <div class="achievements-grid" id="achievementsGrid"></div>
+        </div>
+    </div>
+
      <script>
         // App State
         let currentRating = 0;
@@ -1696,6 +1885,41 @@ updates
         // Mood categorization
         const positiveMoods = ['happy', 'joyful', 'grateful', 'proud', 'motivated', 'energetic', 'peaceful', 'calm', 'excited', 'hopeful', 'loved', 'content', 'inspired'];
         const negativeMoods = ['tired', 'exhausted', 'anxious', 'stressed', 'overwhelmed', 'frustrated', 'sad', 'lonely', 'worried', 'confused', 'restless'];
+
+        // Achievements definition
+        const achievements = [
+            // Entry milestones
+            { id: 'first_entry', name: 'First Steps', desc: 'Create your first diary entry', icon: '📝', category: 'entries', check: (stats) => stats.totalEntries >= 1 },
+            { id: 'five_entries', name: 'Getting Started', desc: 'Create 5 diary entries', icon: '✍️', category: 'entries', check: (stats) => stats.totalEntries >= 5 },
+            { id: 'ten_entries', name: 'Dedicated Diarist', desc: 'Create 10 diary entries', icon: '📖', category: 'entries', check: (stats) => stats.totalEntries >= 10 },
+            { id: 'twentyfive_entries', name: 'Storyteller', desc: 'Create 25 diary entries', icon: '📚', category: 'entries', check: (stats) => stats.totalEntries >= 25 },
+            { id: 'fifty_entries', name: 'Memory Keeper', desc: 'Create 50 diary entries', icon: '🎯', category: 'entries', check: (stats) => stats.totalEntries >= 50 },
+            { id: 'hundred_entries', name: 'Century Club', desc: 'Create 100 diary entries', icon: '💯', category: 'entries', check: (stats) => stats.totalEntries >= 100 },
+
+            // Streak achievements
+            { id: 'streak_3', name: 'Hot Start', desc: 'Maintain a 3-day streak', icon: '🔥', category: 'streaks', check: (stats) => stats.currentStreak >= 3 },
+            { id: 'streak_7', name: 'Week Warrior', desc: 'Maintain a 7-day streak', icon: '⭐', category: 'streaks', check: (stats) => stats.currentStreak >= 7 },
+            { id: 'streak_14', name: 'Two Weeks Strong', desc: 'Maintain a 14-day streak', icon: '💪', category: 'streaks', check: (stats) => stats.currentStreak >= 14 },
+            { id: 'streak_30', name: 'Monthly Master', desc: 'Maintain a 30-day streak', icon: '🌟', category: 'streaks', check: (stats) => stats.currentStreak >= 30 },
+            { id: 'streak_60', name: 'Unstoppable', desc: 'Maintain a 60-day streak', icon: '🚀', category: 'streaks', check: (stats) => stats.currentStreak >= 60 },
+            { id: 'streak_100', name: 'Century Streak', desc: 'Maintain a 100-day streak', icon: '👑', category: 'streaks', check: (stats) => stats.currentStreak >= 100 },
+
+            // Photo achievements
+            { id: 'first_photo', name: 'Picture Perfect', desc: 'Add your first photo', icon: '📷', category: 'photos', check: (stats) => stats.totalPhotos >= 1 },
+            { id: 'ten_photos', name: 'Photographer', desc: 'Add 10 photos', icon: '📸', category: 'photos', check: (stats) => stats.totalPhotos >= 10 },
+            { id: 'fifty_photos', name: 'Photo Album', desc: 'Add 50 photos', icon: '🖼️', category: 'photos', check: (stats) => stats.totalPhotos >= 50 },
+
+            // Mood tracking achievements
+            { id: 'all_moods', name: 'Mood Explorer', desc: 'Experience all mood types', icon: '🎭', category: 'moods', check: (stats) => stats.uniqueMoods >= 24 },
+            { id: 'positive_week', name: 'Sunshine Week', desc: 'Have 70%+ positive moods in a week', icon: '☀️', category: 'moods', check: (stats) => stats.positiveWeekPercent >= 70 },
+            { id: 'balanced_month', name: 'Balanced Life', desc: 'Have a balanced mood month', icon: '⚖️', category: 'moods', check: (stats) => stats.balancedMonth },
+
+            // Special achievements
+            { id: 'reflection_master', name: 'Deep Thinker', desc: 'Answer 20 daily prompts', icon: '💭', category: 'special', check: (stats) => stats.promptsAnswered >= 20 },
+            { id: 'kids_moments', name: 'Super Parent', desc: 'Record 30 moments with kids', icon: '👨‍👩‍👧‍👦', category: 'special', check: (stats) => stats.kidsMoments >= 30 },
+            { id: 'self_care', name: 'Self-Care Champion', desc: 'Record 30 self-care moments', icon: '💆', category: 'special', check: (stats) => stats.selfMoments >= 30 },
+            { id: 'early_bird', name: 'Early Bird', desc: 'Create entry before 9 AM', icon: '🌅', category: 'special', check: (stats) => stats.earlyEntry }
+        ];
 
         // Daily prompts
         const prompts = [
@@ -1948,6 +2172,7 @@ updates
             await loadTodayEntry();
             await checkForPrompt();
             await updateStreakCalendar();
+            await updateAchievementBadge();
 
             // Set max date for date picker to today
             const today = new Date().toISOString().split('T')[0];
@@ -2107,6 +2332,21 @@ updates
                 }
             });
 
+            // Achievements modal
+            document.getElementById('achievementsBtn').addEventListener('click', () => {
+                openAchievementsModal();
+            });
+
+            document.getElementById('closeAchievementsModal').addEventListener('click', () => {
+                document.getElementById('achievementsModal').classList.remove('active');
+            });
+
+            document.getElementById('achievementsModal').addEventListener('click', (e) => {
+                if (e.target.id === 'achievementsModal') {
+                    document.getElementById('achievementsModal').classList.remove('active');
+                }
+            });
+
             // Cancel edit button
             document.getElementById('cancelEdit').addEventListener('click', () => {
                 cancelEdit();
@@ -2263,6 +2503,9 @@ updates
 
             // Update streak calendar
             await updateStreakCalendar();
+
+            // Check for new achievements
+            await checkAndUnlockAchievements();
 
             if (editingDate) {
                 cancelEdit();
@@ -2766,6 +3009,218 @@ updates
                     </div>
                 </div>
             `;
+        }
+
+        // ========== ACHIEVEMENTS SYSTEM ==========
+
+        async function getUnlockedAchievements() {
+            const unlocked = await getSettingFromDB('unlockedAchievements');
+            return unlocked || [];
+        }
+
+        async function saveUnlockedAchievements(unlocked) {
+            await saveSettingToDB('unlockedAchievements', unlocked);
+        }
+
+        async function calculateAchievementStats() {
+            const entries = await getAllEntriesFromDB();
+            const entriesArray = Object.values(entries);
+            const currentStreak = await calculateStreak();
+
+            // Count totals
+            const totalEntries = entriesArray.length;
+            const totalPhotos = entriesArray.reduce((count, e) => {
+                return count + (e.kidsPhoto ? 1 : 0) + (e.selfPhoto ? 1 : 0);
+            }, 0);
+
+            // Count unique moods
+            const allMoods = new Set();
+            entriesArray.forEach(e => {
+                if (e.moods) e.moods.forEach(m => allMoods.add(m));
+            });
+            const uniqueMoods = allMoods.size;
+
+            // Count prompts answered
+            const promptsAnswered = entriesArray.filter(e => e.promptAnswer && e.promptAnswer.trim()).length;
+
+            // Count kids and self moments
+            const kidsMoments = entriesArray.filter(e => e.kidsText && e.kidsText.trim()).length;
+            const selfMoments = entriesArray.filter(e => e.selfText && e.selfText.trim()).length;
+
+            // Check for early entry (before 9 AM)
+            const now = new Date();
+            const earlyEntry = entriesArray.some(e => {
+                const entryTime = new Date(e.timestamp);
+                return entryTime.getHours() < 9;
+            });
+
+            // Calculate positive week percentage
+            const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+            const weekEntries = entriesArray.filter(e => new Date(e.date) >= weekAgo);
+            let positiveCount = 0, negativeCount = 0;
+            weekEntries.forEach(e => {
+                if (e.moods) {
+                    e.moods.forEach(m => {
+                        if (positiveMoods.includes(m)) positiveCount++;
+                        else if (negativeMoods.includes(m)) negativeCount++;
+                    });
+                }
+            });
+            const positiveWeekPercent = (positiveCount + negativeCount > 0)
+                ? (positiveCount / (positiveCount + negativeCount)) * 100
+                : 0;
+
+            // Check for balanced month (40-60% positive)
+            const monthAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+            const monthEntries = entriesArray.filter(e => new Date(e.date) >= monthAgo);
+            let monthPositive = 0, monthNegative = 0;
+            monthEntries.forEach(e => {
+                if (e.moods) {
+                    e.moods.forEach(m => {
+                        if (positiveMoods.includes(m)) monthPositive++;
+                        else if (negativeMoods.includes(m)) monthNegative++;
+                    });
+                }
+            });
+            const monthTotal = monthPositive + monthNegative;
+            const monthPositivePercent = monthTotal > 0 ? (monthPositive / monthTotal) * 100 : 0;
+            const balancedMonth = monthPositivePercent >= 40 && monthPositivePercent <= 60;
+
+            return {
+                totalEntries,
+                totalPhotos,
+                currentStreak,
+                uniqueMoods,
+                promptsAnswered,
+                kidsMoments,
+                selfMoments,
+                earlyEntry,
+                positiveWeekPercent,
+                balancedMonth
+            };
+        }
+
+        async function checkAndUnlockAchievements() {
+            const stats = await calculateAchievementStats();
+            const unlocked = await getUnlockedAchievements();
+            const newlyUnlocked = [];
+
+            for (const achievement of achievements) {
+                if (!unlocked.includes(achievement.id) && achievement.check(stats)) {
+                    unlocked.push(achievement.id);
+                    newlyUnlocked.push(achievement);
+                }
+            }
+
+            if (newlyUnlocked.length > 0) {
+                await saveUnlockedAchievements(unlocked);
+
+                // Show notifications for new achievements
+                for (const achievement of newlyUnlocked) {
+                    await showAchievementNotification(achievement);
+                }
+
+                // Update badge
+                await updateAchievementBadge();
+            }
+        }
+
+        function showAchievementNotification(achievement) {
+            return new Promise((resolve) => {
+                const notification = document.createElement('div');
+                notification.className = 'achievement-notification';
+                notification.innerHTML = `
+                    <div class="achievement-notification-icon">${achievement.icon}</div>
+                    <div class="achievement-notification-title">Achievement Unlocked!</div>
+                    <div class="achievement-notification-name">${achievement.name}</div>
+                    <div class="achievement-notification-desc">${achievement.desc}</div>
+                `;
+
+                document.body.appendChild(notification);
+
+                // Remove after 4 seconds
+                setTimeout(() => {
+                    notification.style.opacity = '0';
+                    notification.style.transform = 'translateX(-50%) translateY(-20px)';
+                    setTimeout(() => {
+                        notification.remove();
+                        resolve();
+                    }, 300);
+                }, 4000);
+            });
+        }
+
+        async function updateAchievementBadge() {
+            const unlocked = await getUnlockedAchievements();
+            const badge = document.getElementById('achievementBadge');
+            const newCount = unlocked.length;
+
+            if (newCount > 0) {
+                badge.textContent = newCount;
+                badge.style.display = 'flex';
+            } else {
+                badge.style.display = 'none';
+            }
+        }
+
+        async function openAchievementsModal() {
+            const stats = await calculateAchievementStats();
+            const unlocked = await getUnlockedAchievements();
+
+            const grid = document.getElementById('achievementsGrid');
+            const unlockedCount = document.getElementById('unlockedCount');
+            const totalCount = document.getElementById('totalCount');
+            const progressFill = document.getElementById('achievementsProgressFill');
+
+            unlockedCount.textContent = unlocked.length;
+            totalCount.textContent = achievements.length;
+            const progressPercent = (unlocked.length / achievements.length) * 100;
+            progressFill.style.width = `${progressPercent}%`;
+
+            grid.innerHTML = achievements.map(achievement => {
+                const isUnlocked = unlocked.includes(achievement.id);
+                const progress = getAchievementProgress(achievement, stats);
+
+                return `
+                    <div class="achievement-card ${isUnlocked ? 'unlocked' : 'locked'}">
+                        <span class="achievement-icon">${achievement.icon}</span>
+                        <div class="achievement-name">${achievement.name}</div>
+                        <div class="achievement-desc">${achievement.desc}</div>
+                        ${!isUnlocked && progress ? `<div class="achievement-progress">${progress}</div>` : ''}
+                    </div>
+                `;
+            }).join('');
+
+            document.getElementById('achievementsModal').classList.add('active');
+        }
+
+        function getAchievementProgress(achievement, stats) {
+            // Return progress string for locked achievements
+            if (achievement.id.includes('entries')) {
+                const target = parseInt(achievement.id.match(/\d+/)?.[0]) || (achievement.id === 'first_entry' ? 1 : 0);
+                if (target && stats.totalEntries < target) {
+                    return `${stats.totalEntries}/${target} entries`;
+                }
+            } else if (achievement.id.includes('streak_')) {
+                const target = parseInt(achievement.id.match(/\d+/)?.[0]);
+                if (target && stats.currentStreak < target) {
+                    return `${stats.currentStreak}/${target} days`;
+                }
+            } else if (achievement.id.includes('photo')) {
+                const target = achievement.id === 'first_photo' ? 1 : parseInt(achievement.id.match(/\d+/)?.[0]);
+                if (target && stats.totalPhotos < target) {
+                    return `${stats.totalPhotos}/${target} photos`;
+                }
+            } else if (achievement.id === 'all_moods') {
+                return `${stats.uniqueMoods}/24 moods`;
+            } else if (achievement.id === 'reflection_master') {
+                return `${stats.promptsAnswered}/20 prompts`;
+            } else if (achievement.id === 'kids_moments') {
+                return `${stats.kidsMoments}/30 moments`;
+            } else if (achievement.id === 'self_care') {
+                return `${stats.selfMoments}/30 moments`;
+            }
+            return '';
         }
 
         function showPhotoModal(photoSrc) {

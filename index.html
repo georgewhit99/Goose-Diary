@@ -1,3 +1,4 @@
+updates 2
 updates 
 <!DOCTYPE html>
 <html lang="en">
@@ -1007,6 +1008,16 @@ updates
             font-weight: 700;
             font-size: 1.25rem;
             font-family: 'Fraunces', serif;
+            position: relative;
+            min-height: 30px;
+        }
+
+        .mood-balance-fill::before {
+            content: attr(data-count);
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
         }
 
         .mood-balance-fill.positive {
@@ -3019,18 +3030,14 @@ updates
                         <div class="mood-balance-emoji">😊</div>
                         <div class="mood-balance-label" style="color: var(--mood-grateful);">Positive</div>
                         <div class="mood-balance-visual">
-                            <div class="mood-balance-fill positive" style="height: ${positivePercent}%;">
-                                ${positiveCount}
-                            </div>
+                            <div class="mood-balance-fill positive" style="height: ${positivePercent}%;" data-count="${positiveCount}"></div>
                         </div>
                     </div>
                     <div class="mood-balance-bar">
                         <div class="mood-balance-emoji">😔</div>
                         <div class="mood-balance-label" style="color: var(--mood-stressed);">Challenging</div>
                         <div class="mood-balance-visual">
-                            <div class="mood-balance-fill negative" style="height: ${negativePercent}%;">
-                                ${negativeCount}
-                            </div>
+                            <div class="mood-balance-fill negative" style="height: ${negativePercent}%;" data-count="${negativeCount}"></div>
                         </div>
                     </div>
                 </div>

@@ -2032,8 +2032,23 @@ updates
             const today = new Date();
             today.setHours(0, 0, 0, 0);
 
+            // Start checking from yesterday (today doesn't break the streak)
             let checkDate = new Date(today);
+            checkDate.setDate(checkDate.getDate() - 1);
 
+            // Check if there's an entry for today
+            const hasToday = sortedDates.some(d => {
+                const entryDate = new Date(d);
+                entryDate.setHours(0, 0, 0, 0);
+                return entryDate.getTime() === today.getTime();
+            });
+
+            // If today has an entry, count it
+            if (hasToday) {
+                streak = 1;
+            }
+
+            // Count backwards from yesterday
             for (let i = 0; i < sortedDates.length; i++) {
                 const entryDate = new Date(sortedDates[i]);
                 entryDate.setHours(0, 0, 0, 0);
@@ -2042,6 +2057,7 @@ updates
                     streak++;
                     checkDate.setDate(checkDate.getDate() - 1);
                 } else if (entryDate.getTime() < checkDate.getTime()) {
+                    // Gap found, streak ends
                     break;
                 }
             }
@@ -2799,9 +2815,19 @@ updates
         async function updateWeeklyView() {
             const entriesObj = await getAllEntriesFromDB();
             const entries = Object.values(entriesObj);
+
+            // Get current time in UK timezone
             const now = new Date();
-            const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-            const weekEntries = entries.filter(e => new Date(e.date) >= weekAgo);
+            const ukTime = new Date(now.toLocaleString('en-US', { timeZone: 'Europe/London' }));
+
+            // Find the most recent Monday at midnight UK time
+            const dayOfWeek = ukTime.getDay();
+            const daysToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1; // Sunday = 0, Monday = 1
+            const mondayMidnight = new Date(ukTime);
+            mondayMidnight.setDate(ukTime.getDate() - daysToMonday);
+            mondayMidnight.setHours(0, 0, 0, 0);
+
+            const weekEntries = entries.filter(e => new Date(e.date) >= mondayMidnight);
 
             // Average mood
             const avgMood = weekEntries.length > 0

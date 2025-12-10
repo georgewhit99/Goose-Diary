@@ -1,4 +1,4 @@
-2updates 2
+updates 2
 updates 
 <!DOCTYPE html>
 <html lang="en">
@@ -1436,11 +1436,38 @@ updates
             animation: pulse 2s ease-in-out infinite;
         }
 
+        .achievements-categories {
+            margin-top: 1.5rem;
+        }
+
+        .achievement-category {
+            margin-bottom: 2rem;
+        }
+
+        .achievement-category-title {
+            font-family: 'Fraunces', serif;
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--color-text);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .achievement-category-count {
+            font-size: 0.75rem;
+            color: var(--color-text-secondary);
+            font-weight: 500;
+            background: var(--color-border);
+            padding: 0.15rem 0.5rem;
+            border-radius: 1rem;
+        }
+
         .achievements-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
             gap: 1rem;
-            margin-top: 1.5rem;
         }
 
         .achievement-card {
@@ -1448,24 +1475,70 @@ updates
             border-radius: 1rem;
             padding: 1.25rem;
             text-align: center;
-            transition: all 0.3s ease;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
             border: 2px solid var(--color-border);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .achievement-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--color-primary), var(--color-accent));
+            transform: scaleX(0);
+            transform-origin: left;
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .achievement-card.unlocked {
             border-color: var(--color-primary);
-            background: linear-gradient(135deg, rgba(212, 132, 92, 0.1), rgba(232, 178, 152, 0.1));
+            background: linear-gradient(135deg, rgba(232, 158, 111, 0.15), rgba(107, 168, 160, 0.15));
+            box-shadow: 0 4px 12px rgba(232, 158, 111, 0.2);
+            animation: unlockPulse 0.6s ease-out;
+        }
+
+        .achievement-card.unlocked::before {
+            transform: scaleX(1);
+        }
+
+        @keyframes unlockPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .achievement-card.in-progress {
+            border-color: rgba(232, 158, 111, 0.4);
+            background: linear-gradient(135deg, rgba(232, 158, 111, 0.05), rgba(107, 168, 160, 0.05));
+        }
+
+        .achievement-card.in-progress:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
         }
 
         .achievement-card.locked {
-            opacity: 0.5;
-            filter: grayscale(100%);
+            display: none;
         }
 
         .achievement-icon {
             font-size: 2.5rem;
             margin-bottom: 0.5rem;
             display: block;
+            transition: transform 0.3s ease;
+        }
+
+        .achievement-card.unlocked .achievement-icon {
+            animation: iconCelebrate 0.6s ease-out 0.2s;
+        }
+
+        @keyframes iconCelebrate {
+            0%, 100% { transform: rotate(0deg) scale(1); }
+            25% { transform: rotate(-10deg) scale(1.1); }
+            75% { transform: rotate(10deg) scale(1.1); }
         }
 
         .achievement-name {
@@ -1482,11 +1555,47 @@ updates
             line-height: 1.4;
         }
 
-        .achievement-progress {
-            margin-top: 0.5rem;
+        .achievement-progress-container {
+            margin-top: 0.75rem;
+        }
+
+        .achievement-progress-text {
             font-size: 0.7rem;
             color: var(--color-primary);
             font-weight: 600;
+            margin-bottom: 0.35rem;
+        }
+
+        .achievement-progress-bar-mini {
+            height: 4px;
+            background: var(--color-border);
+            border-radius: 1rem;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .achievement-progress-fill-mini {
+            height: 100%;
+            background: linear-gradient(90deg, var(--color-primary), var(--color-accent));
+            border-radius: 1rem;
+            transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+        }
+
+        .achievement-progress-fill-mini::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            right: 0;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            animation: shimmerProgress 2s infinite;
+        }
+
+        @keyframes shimmerProgress {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
         }
 
         .achievement-notification {
@@ -1553,30 +1662,77 @@ updates
         }
 
         .achievements-summary {
-            background: var(--color-bg);
-            padding: 1rem;
-            border-radius: 0.75rem;
+            background: linear-gradient(135deg, rgba(232, 158, 111, 0.1), rgba(107, 168, 160, 0.1));
+            padding: 1.25rem;
+            border-radius: 1rem;
             margin-bottom: 1.5rem;
             text-align: center;
+            border: 2px solid var(--color-border);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .achievements-summary::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            animation: summaryShine 3s infinite;
+        }
+
+        @keyframes summaryShine {
+            0%, 100% { left: -100%; }
+            50% { left: 100%; }
         }
 
         .achievements-progress-bar {
-            height: 8px;
+            height: 10px;
             background: var(--color-border);
             border-radius: 1rem;
             overflow: hidden;
             margin: 0.75rem 0;
+            position: relative;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
         }
 
         .achievements-progress-fill {
             height: 100%;
             background: linear-gradient(90deg, var(--color-primary), var(--color-accent));
-            transition: width 0.5s ease;
+            transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            box-shadow: 0 0 10px rgba(232, 158, 111, 0.5);
+        }
+
+        .achievements-progress-fill::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            right: 0;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            animation: progressShimmer 2s infinite;
+        }
+
+        @keyframes progressShimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
         }
 
         .achievements-stats {
-            font-size: 0.85rem;
-            color: var(--color-text-secondary);
+            font-size: 0.9rem;
+            color: var(--color-text);
+            font-weight: 500;
+            position: relative;
+            z-index: 1;
+        }
+
+        .achievements-stats strong {
+            color: var(--color-primary);
+            font-size: 1.1rem;
         }
 
         /* Animated Goose */
@@ -1686,6 +1842,21 @@ updates
 
         .dark .streak-calendar.active-streak {
             background: linear-gradient(135deg, var(--color-primary), var(--color-accent));
+        }
+
+        /* Dark mode achievements */
+        .dark .achievement-card.unlocked {
+            background: linear-gradient(135deg, rgba(232, 158, 111, 0.2), rgba(107, 168, 160, 0.2));
+            box-shadow: 0 4px 12px rgba(232, 158, 111, 0.3);
+        }
+
+        .dark .achievement-card.in-progress {
+            background: linear-gradient(135deg, rgba(232, 158, 111, 0.08), rgba(107, 168, 160, 0.08));
+        }
+
+        .dark .achievements-summary {
+            background: linear-gradient(135deg, rgba(232, 158, 111, 0.15), rgba(107, 168, 160, 0.15));
+            border-color: var(--color-border);
         }
     </style>
 </head>
@@ -1972,7 +2143,7 @@ updates
                     <div class="achievements-progress-fill" id="achievementsProgressFill" style="width: 0%"></div>
                 </div>
             </div>
-            <div class="achievements-grid" id="achievementsGrid"></div>
+            <div class="achievements-categories" id="achievementsCategories"></div>
         </div>
     </div>
 
@@ -3348,58 +3519,144 @@ updates
             const stats = await calculateAchievementStats();
             const unlocked = await getUnlockedAchievements();
 
-            const grid = document.getElementById('achievementsGrid');
+            const categoriesContainer = document.getElementById('achievementsCategories');
             const unlockedCount = document.getElementById('unlockedCount');
             const totalCount = document.getElementById('totalCount');
             const progressFill = document.getElementById('achievementsProgressFill');
 
+            // Count visible (unlocked or in-progress) achievements
+            const visibleAchievements = achievements.filter(a => {
+                const isUnlocked = unlocked.includes(a.id);
+                const progressData = getAchievementProgressData(a, stats);
+                return isUnlocked || (progressData && progressData.current > 0);
+            });
+
             unlockedCount.textContent = unlocked.length;
-            totalCount.textContent = achievements.length;
-            const progressPercent = (unlocked.length / achievements.length) * 100;
+            totalCount.textContent = visibleAchievements.length;
+            const progressPercent = visibleAchievements.length > 0 ? (unlocked.length / visibleAchievements.length) * 100 : 0;
             progressFill.style.width = `${progressPercent}%`;
 
-            grid.innerHTML = achievements.map(achievement => {
-                const isUnlocked = unlocked.includes(achievement.id);
-                const progress = getAchievementProgress(achievement, stats);
+            // Group achievements by category
+            const categories = {
+                'entries': { title: '📝 Diary Entries', icon: '📝' },
+                'streaks': { title: '🔥 Streaks', icon: '🔥' },
+                'photos': { title: '📸 Photos', icon: '📸' },
+                'moods': { title: '😊 Moods & Emotions', icon: '😊' },
+                'special': { title: '⭐ Special', icon: '⭐' }
+            };
+
+            const groupedAchievements = {};
+            achievements.forEach(achievement => {
+                const category = achievement.category || 'special';
+                if (!groupedAchievements[category]) {
+                    groupedAchievements[category] = [];
+                }
+                groupedAchievements[category].push(achievement);
+            });
+
+            categoriesContainer.innerHTML = Object.keys(groupedAchievements).map(categoryKey => {
+                const categoryAchievements = groupedAchievements[categoryKey];
+                const categoryInfo = categories[categoryKey] || { title: categoryKey, icon: '🏆' };
+
+                const unlockedInCategory = categoryAchievements.filter(a => unlocked.includes(a.id)).length;
+                const visibleInCategory = categoryAchievements.filter(a => {
+                    const isUnlocked = unlocked.includes(a.id);
+                    const progressData = getAchievementProgressData(a, stats);
+                    return isUnlocked || (progressData && progressData.current > 0);
+                }).length;
+
+                // Skip category if no achievements are visible
+                if (visibleInCategory === 0) return '';
+
+                const achievementCards = categoryAchievements.map(achievement => {
+                    const isUnlocked = unlocked.includes(achievement.id);
+                    const progressData = getAchievementProgressData(achievement, stats);
+
+                    // Hide locked achievements with no progress
+                    if (!isUnlocked && (!progressData || progressData.current === 0)) {
+                        return '';
+                    }
+
+                    const cardClass = isUnlocked ? 'unlocked' : 'in-progress';
+                    const progressPercent = progressData ? (progressData.current / progressData.total) * 100 : 0;
+
+                    return `
+                        <div class="achievement-card ${cardClass}">
+                            <span class="achievement-icon">${achievement.icon}</span>
+                            <div class="achievement-name">${achievement.name}</div>
+                            <div class="achievement-desc">${achievement.desc}</div>
+                            ${!isUnlocked && progressData ? `
+                                <div class="achievement-progress-container">
+                                    <div class="achievement-progress-text">${progressData.current}/${progressData.total}</div>
+                                    <div class="achievement-progress-bar-mini">
+                                        <div class="achievement-progress-fill-mini" style="width: ${progressPercent}%"></div>
+                                    </div>
+                                </div>
+                            ` : ''}
+                        </div>
+                    `;
+                }).filter(card => card !== '').join('');
+
+                if (!achievementCards) return '';
 
                 return `
-                    <div class="achievement-card ${isUnlocked ? 'unlocked' : 'locked'}">
-                        <span class="achievement-icon">${achievement.icon}</span>
-                        <div class="achievement-name">${achievement.name}</div>
-                        <div class="achievement-desc">${achievement.desc}</div>
-                        ${!isUnlocked && progress ? `<div class="achievement-progress">${progress}</div>` : ''}
+                    <div class="achievement-category">
+                        <div class="achievement-category-title">
+                            ${categoryInfo.title}
+                            <span class="achievement-category-count">${unlockedInCategory}/${visibleInCategory}</span>
+                        </div>
+                        <div class="achievements-grid">
+                            ${achievementCards}
+                        </div>
                     </div>
                 `;
-            }).join('');
+            }).filter(cat => cat !== '').join('');
 
             document.getElementById('achievementsModal').classList.add('active');
         }
 
-        function getAchievementProgress(achievement, stats) {
-            // Return progress string for locked achievements
+        function getAchievementProgressData(achievement, stats) {
+            // Return structured progress data { current, total }
             if (achievement.id.includes('entries')) {
                 const target = parseInt(achievement.id.match(/\d+/)?.[0]) || (achievement.id === 'first_entry' ? 1 : 0);
-                if (target && stats.totalEntries < target) {
-                    return `${stats.totalEntries}/${target} entries`;
-                }
+                return { current: stats.totalEntries, total: target };
             } else if (achievement.id.includes('streak_')) {
                 const target = parseInt(achievement.id.match(/\d+/)?.[0]);
-                if (target && stats.currentStreak < target) {
-                    return `${stats.currentStreak}/${target} days`;
-                }
+                return { current: stats.currentStreak, total: target };
             } else if (achievement.id.includes('photo')) {
                 const target = achievement.id === 'first_photo' ? 1 : parseInt(achievement.id.match(/\d+/)?.[0]);
-                if (target && stats.totalPhotos < target) {
-                    return `${stats.totalPhotos}/${target} photos`;
-                }
+                return { current: stats.totalPhotos, total: target };
             } else if (achievement.id === 'all_moods') {
-                return `${stats.uniqueMoods}/24 moods`;
+                return { current: stats.uniqueMoods, total: 24 };
             } else if (achievement.id === 'reflection_master') {
-                return `${stats.promptsAnswered}/20 prompts`;
+                return { current: stats.promptsAnswered, total: 20 };
             } else if (achievement.id === 'kids_moments') {
-                return `${stats.kidsMoments}/30 moments`;
+                return { current: stats.kidsMoments, total: 30 };
             } else if (achievement.id === 'self_care') {
-                return `${stats.selfMoments}/30 moments`;
+                return { current: stats.selfMoments, total: 30 };
+            }
+            return null;
+        }
+
+        function getAchievementProgress(achievement, stats) {
+            // Return progress string for locked achievements (backward compatibility)
+            const data = getAchievementProgressData(achievement, stats);
+            if (!data) return '';
+
+            if (achievement.id.includes('entries')) {
+                return `${data.current}/${data.total} entries`;
+            } else if (achievement.id.includes('streak_')) {
+                return `${data.current}/${data.total} days`;
+            } else if (achievement.id.includes('photo')) {
+                return `${data.current}/${data.total} photos`;
+            } else if (achievement.id === 'all_moods') {
+                return `${data.current}/${data.total} moods`;
+            } else if (achievement.id === 'reflection_master') {
+                return `${data.current}/${data.total} prompts`;
+            } else if (achievement.id === 'kids_moments') {
+                return `${data.current}/${data.total} moments`;
+            } else if (achievement.id === 'self_care') {
+                return `${data.current}/${data.total} moments`;
             }
             return '';
         }
@@ -3410,4 +3667,4 @@ updates
         }
     </script>
     </body>
-</html></html>
+</html>

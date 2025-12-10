@@ -2518,6 +2518,7 @@ updates
             await loadTodayEntry();
             await checkForPrompt();
             await updateStreakCalendar();
+            await checkAndUnlockAchievements();
             await updateAchievementBadge();
 
             // Set max date for date picker to today
@@ -3554,7 +3555,7 @@ updates
                 groupedAchievements[category].push(achievement);
             });
 
-            categoriesContainer.innerHTML = Object.keys(groupedAchievements).map(categoryKey => {
+            const categoriesHTML = Object.keys(groupedAchievements).map(categoryKey => {
                 const categoryAchievements = groupedAchievements[categoryKey];
                 const categoryInfo = categories[categoryKey] || { title: categoryKey, icon: '🏆' };
 
@@ -3612,28 +3613,52 @@ updates
                 `;
             }).filter(cat => cat !== '').join('');
 
+            // Show a message if no achievements are visible
+            if (!categoriesHTML) {
+                categoriesContainer.innerHTML = `
+                    <div style="text-align: center; padding: 3rem 1rem; color: var(--color-text-secondary);">
+                        <div style="font-size: 3rem; margin-bottom: 1rem;">🎯</div>
+                        <div style="font-size: 1.1rem; margin-bottom: 0.5rem;">Start Your Journey!</div>
+                        <div style="font-size: 0.9rem;">Create your first diary entry to unlock achievements</div>
+                    </div>
+                `;
+            } else {
+                categoriesContainer.innerHTML = categoriesHTML;
+            }
+
             document.getElementById('achievementsModal').classList.add('active');
         }
 
         function getAchievementProgressData(achievement, stats) {
             // Return structured progress data { current, total }
             if (achievement.id.includes('entries')) {
-                const target = parseInt(achievement.id.match(/\d+/)?.[0]) || (achievement.id === 'first_entry' ? 1 : 0);
-                return { current: stats.totalEntries, total: target };
+                const match = achievement.id.match(/\d+/);
+                const target = match ? parseInt(match[0]) : (achievement.id === 'first_entry' ? 1 : 0);
+                return { current: stats.totalEntries || 0, total: target };
             } else if (achievement.id.includes('streak_')) {
-                const target = parseInt(achievement.id.match(/\d+/)?.[0]);
-                return { current: stats.currentStreak, total: target };
+                const match = achievement.id.match(/\d+/);
+                const target = match ? parseInt(match[0]) : 0;
+                return { current: stats.currentStreak || 0, total: target };
             } else if (achievement.id.includes('photo')) {
-                const target = achievement.id === 'first_photo' ? 1 : parseInt(achievement.id.match(/\d+/)?.[0]);
-                return { current: stats.totalPhotos, total: target };
+                const match = achievement.id.match(/\d+/);
+                const target = achievement.id === 'first_photo' ? 1 : (match ? parseInt(match[0]) : 0);
+                return { current: stats.totalPhotos || 0, total: target };
             } else if (achievement.id === 'all_moods') {
-                return { current: stats.uniqueMoods, total: 24 };
+                return { current: stats.uniqueMoods || 0, total: 24 };
             } else if (achievement.id === 'reflection_master') {
-                return { current: stats.promptsAnswered, total: 20 };
+                return { current: stats.promptsAnswered || 0, total: 20 };
             } else if (achievement.id === 'kids_moments') {
-                return { current: stats.kidsMoments, total: 30 };
+                return { current: stats.kidsMoments || 0, total: 30 };
             } else if (achievement.id === 'self_care') {
-                return { current: stats.selfMoments, total: 30 };
+                return { current: stats.selfMoments || 0, total: 30 };
+            } else if (achievement.id === 'positive_week') {
+                return { current: Math.round(stats.positiveWeekPercent || 0), total: 70 };
+            } else if (achievement.id === 'balanced_month') {
+                // For balanced month, we can't really show progress, so just return null
+                return null;
+            } else if (achievement.id === 'early_bird') {
+                // Binary achievement - either done or not
+                return null;
             }
             return null;
         }

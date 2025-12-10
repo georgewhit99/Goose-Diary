@@ -3631,17 +3631,42 @@ updates
 
         function getAchievementProgressData(achievement, stats) {
             // Return structured progress data { current, total }
+
+            // Helper function to extract target from achievement ID
+            function getTargetFromId(id) {
+                // First try to extract numeric digits
+                const numMatch = id.match(/\d+/);
+                if (numMatch) {
+                    return parseInt(numMatch[0]);
+                }
+
+                // Handle text-based numbers (check longest matches first to avoid partial matches)
+                const textNumbers = [
+                    ['twentyfive', 25],
+                    ['hundred', 100],
+                    ['fifty', 50],
+                    ['first', 1],
+                    ['five', 5],
+                    ['ten', 10]
+                ];
+
+                for (const [text, num] of textNumbers) {
+                    if (id.includes(text)) {
+                        return num;
+                    }
+                }
+
+                return 0;
+            }
+
             if (achievement.id.includes('entries')) {
-                const match = achievement.id.match(/\d+/);
-                const target = match ? parseInt(match[0]) : (achievement.id === 'first_entry' ? 1 : 0);
+                const target = getTargetFromId(achievement.id);
                 return { current: stats.totalEntries || 0, total: target };
             } else if (achievement.id.includes('streak_')) {
-                const match = achievement.id.match(/\d+/);
-                const target = match ? parseInt(match[0]) : 0;
+                const target = getTargetFromId(achievement.id);
                 return { current: stats.currentStreak || 0, total: target };
             } else if (achievement.id.includes('photo')) {
-                const match = achievement.id.match(/\d+/);
-                const target = achievement.id === 'first_photo' ? 1 : (match ? parseInt(match[0]) : 0);
+                const target = getTargetFromId(achievement.id);
                 return { current: stats.totalPhotos || 0, total: target };
             } else if (achievement.id === 'all_moods') {
                 return { current: stats.uniqueMoods || 0, total: 24 };

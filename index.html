@@ -2033,41 +2033,33 @@ updates
         // Calculate current streak
         async function calculateStreak() {
             const entries = await getAllEntriesFromDB();
-            const sortedDates = Object.keys(entries)
-                .map(dateStr => new Date(dateStr))
-                .sort((a, b) => b - a);
 
-            if (sortedDates.length === 0) return 0;
+            if (Object.keys(entries).length === 0) return 0;
 
-            let streak = 0;
             const today = new Date();
             today.setHours(0, 0, 0, 0);
 
-            // Start checking from yesterday (today doesn't break the streak)
-            let checkDate = new Date(today);
-            checkDate.setDate(checkDate.getDate() - 1);
-
             // Check if there's an entry for today
-            const hasToday = sortedDates.some(d => {
-                const entryDate = new Date(d);
-                entryDate.setHours(0, 0, 0, 0);
-                return entryDate.getTime() === today.getTime();
-            });
+            const todayStr = today.toDateString();
+            const hasToday = entries[todayStr] !== undefined;
 
-            // If today has an entry, count it
+            let streak = 0;
+            let checkDate = new Date(today);
+
+            // If there's an entry today, start streak from today
+            // If no entry today, streak must start from yesterday or earlier
             if (hasToday) {
                 streak = 1;
+                checkDate.setDate(checkDate.getDate() - 1);
             }
 
-            // Count backwards from yesterday
-            for (let i = 0; i < sortedDates.length; i++) {
-                const entryDate = new Date(sortedDates[i]);
-                entryDate.setHours(0, 0, 0, 0);
-
-                if (entryDate.getTime() === checkDate.getTime()) {
+            // Count backwards day by day
+            while (true) {
+                const checkDateStr = checkDate.toDateString();
+                if (entries[checkDateStr]) {
                     streak++;
                     checkDate.setDate(checkDate.getDate() - 1);
-                } else if (entryDate.getTime() < checkDate.getTime()) {
+                } else {
                     // Gap found, streak ends
                     break;
                 }
@@ -3262,4 +3254,4 @@ updates
         }
     </script>
     </body>
-</html>  
+</html>

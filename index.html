@@ -1,4 +1,4 @@
-
+2updates 2
 updates 
 <!DOCTYPE html>
 <html lang="en">
@@ -197,11 +197,44 @@ updates
 
         /* Streak Calendar */
         .streak-calendar {
-            background: linear-gradient(135deg, var(--color-primary), var(--color-accent));
+            background: linear-gradient(135deg, #94a3b8, #cbd5e1);
             border-radius: 1.25rem;
             padding: 1.25rem;
             margin-bottom: 1.5rem;
             box-shadow: 0 4px 12px var(--color-shadow);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .streak-calendar.active-streak {
+            background: linear-gradient(135deg, var(--color-primary), var(--color-accent));
+        }
+
+        .streak-calendar.active-streak::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            animation: shimmer 3s ease-in-out infinite;
+        }
+
+        @keyframes shimmer {
+            0%, 100% { transform: translate(0, 0); opacity: 0; }
+            50% { transform: translate(10%, 10%); opacity: 1; }
+        }
+
+        .streak-calendar.milestone {
+            animation: celebrateMilestone 0.6s ease-out;
+        }
+
+        @keyframes celebrateMilestone {
+            0%, 100% { transform: scale(1); }
+            25% { transform: scale(1.02) rotate(-1deg); }
+            75% { transform: scale(1.02) rotate(1deg); }
         }
 
         .streak-header {
@@ -210,6 +243,8 @@ updates
             align-items: center;
             margin-bottom: 1rem;
             gap: 0.5rem;
+            position: relative;
+            z-index: 1;
         }
 
         .streak-info {
@@ -217,6 +252,11 @@ updates
             align-items: center;
             gap: 0.75rem;
             color: white;
+            transition: all 0.3s ease;
+        }
+
+        .streak-info.hidden {
+            opacity: 0.4;
         }
 
         .streak-number {
@@ -224,11 +264,35 @@ updates
             font-size: 1.75rem;
             font-weight: 700;
             color: white;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            min-width: 2.5rem;
+            text-align: center;
+        }
+
+        .streak-number.growing {
+            animation: growNumber 0.5s ease-out;
+        }
+
+        @keyframes growNumber {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.3); }
+            100% { transform: scale(1); }
         }
 
         .streak-label {
             font-size: 0.85rem;
             opacity: 0.9;
+            transition: all 0.3s ease;
+        }
+
+        .streak-progress-bar {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            height: 3px;
+            background: rgba(255, 255, 255, 0.6);
+            transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 1;
         }
 
         .week-nav-btn {
@@ -314,7 +378,7 @@ updates
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: all 0.3s ease;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             position: relative;
             cursor: pointer;
         }
@@ -327,7 +391,14 @@ updates
         .week-day-dot.completed {
             background: white;
             border-color: white;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15), 0 0 0 0 rgba(255, 255, 255, 0.6);
+            animation: completePulse 0.6s ease-out;
+        }
+
+        @keyframes completePulse {
+            0% { transform: scale(0.8); opacity: 0; }
+            50% { box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15), 0 0 0 8px rgba(255, 255, 255, 0.3); }
+            100% { transform: scale(1); opacity: 1; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15), 0 0 0 0 rgba(255, 255, 255, 0); }
         }
 
         .week-day-dot.completed::after {
@@ -335,11 +406,27 @@ updates
             color: var(--color-primary);
             font-weight: 700;
             font-size: 1.1rem;
+            animation: checkAppear 0.4s ease-out 0.2s both;
+        }
+
+        @keyframes checkAppear {
+            0% { transform: scale(0) rotate(-45deg); opacity: 0; }
+            100% { transform: scale(1) rotate(0deg); opacity: 1; }
+        }
+
+        .week-day-dot.completed:hover::after {
+            animation: none;
         }
 
         .week-day-dot.today {
             border-width: 3px;
             border-color: white;
+            animation: todayPulse 2s ease-in-out infinite;
+        }
+
+        @keyframes todayPulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.4); }
+            50% { box-shadow: 0 0 0 6px rgba(255, 255, 255, 0); }
         }
 
         .week-day-dot.today:not(.completed) {
@@ -1591,6 +1678,15 @@ updates
         .dark .speech-bubble::after {
             border-top-color: var(--color-surface);
         }
+
+        /* Dark mode streak calendar */
+        .dark .streak-calendar {
+            background: linear-gradient(135deg, #3d332e, #2d2320);
+        }
+
+        .dark .streak-calendar.active-streak {
+            background: linear-gradient(135deg, var(--color-primary), var(--color-accent));
+        }
     </style>
 </head>
 <body>
@@ -1625,13 +1721,14 @@ updates
         <div class="view-container active" id="daily-view">
             <div class="daily-view">
                 <!-- Streak Calendar -->
-                <div class="streak-calendar">
+                <div class="streak-calendar" id="streakCalendar">
+                    <div class="streak-progress-bar" id="streakProgressBar"></div>
                     <div class="streak-header">
-                        <div class="streak-info">
+                        <div class="streak-info" id="streakInfo">
                             <div class="streak-number" id="streakCount">0</div>
-                            <div class="streak-label">
+                            <div class="streak-label" id="streakLabel">
                                 <div style="font-weight: 600;">Day Streak 🔥</div>
-                                <div style="font-size: 0.75rem; opacity: 0.8;">Keep it going!</div>
+                                <div style="font-size: 0.75rem; opacity: 0.8;" id="streakMessage">Start your journey!</div>
                             </div>
                         </div>
                         <button class="week-nav-btn" id="prevWeek" title="Previous week">◀</button>
@@ -2071,8 +2168,67 @@ updates
         // Update streak calendar
         async function updateStreakCalendar() {
             const entries = await getAllEntriesFromDB();
+            const previousStreak = parseInt(document.getElementById('streakCount').textContent) || 0;
             const streak = await calculateStreak();
-            document.getElementById('streakCount').textContent = streak;
+
+            // Update streak number with animation if it increased
+            const streakCountEl = document.getElementById('streakCount');
+            streakCountEl.textContent = streak;
+
+            if (streak > previousStreak) {
+                streakCountEl.classList.add('growing');
+                setTimeout(() => streakCountEl.classList.remove('growing'), 500);
+            }
+
+            // Update visual states
+            const streakCalendar = document.getElementById('streakCalendar');
+            const streakInfo = document.getElementById('streakInfo');
+            const streakMessage = document.getElementById('streakMessage');
+            const progressBar = document.getElementById('streakProgressBar');
+
+            // Calculate progress towards next milestone
+            const milestones = [3, 7, 14, 30, 60, 100];
+            let nextMilestone = milestones.find(m => m > streak) || 100;
+            let previousMilestone = milestones.filter(m => m <= streak).pop() || 0;
+            let progress = ((streak - previousMilestone) / (nextMilestone - previousMilestone)) * 100;
+
+            // Update progress bar
+            progressBar.style.width = `${progress}%`;
+
+            // Update styles based on streak
+            if (streak === 0) {
+                streakCalendar.classList.remove('active-streak');
+                streakInfo.classList.add('hidden');
+                streakMessage.textContent = 'Start your journey!';
+            } else {
+                streakCalendar.classList.add('active-streak');
+                streakInfo.classList.remove('hidden');
+
+                // Update message based on streak
+                if (streak === 1) {
+                    streakMessage.textContent = 'Great start! Keep going!';
+                } else if (streak < 3) {
+                    streakMessage.textContent = `${3 - streak} more to reach 3 days! 🎯`;
+                } else if (streak < 7) {
+                    streakMessage.textContent = `${7 - streak} more to reach a week! ⭐`;
+                } else if (streak < 14) {
+                    streakMessage.textContent = `${14 - streak} more to reach 2 weeks! 💪`;
+                } else if (streak < 30) {
+                    streakMessage.textContent = `${30 - streak} more to reach 30 days! 🌟`;
+                } else if (streak < 60) {
+                    streakMessage.textContent = `${60 - streak} more to reach 60 days! 🚀`;
+                } else if (streak < 100) {
+                    streakMessage.textContent = `${100 - streak} more to reach 100 days! 👑`;
+                } else {
+                    streakMessage.textContent = 'Legendary streak! 🏆';
+                }
+
+                // Check if hit a milestone
+                if (milestones.includes(streak)) {
+                    streakCalendar.classList.add('milestone');
+                    setTimeout(() => streakCalendar.classList.remove('milestone'), 600);
+                }
+            }
 
             const weekDaysContainer = document.getElementById('weekDays');
             const weekIndicator = document.getElementById('weekIndicator');
@@ -3254,4 +3410,4 @@ updates
         }
     </script>
     </body>
-</html>
+</html></html>

@@ -40,7 +40,6 @@ updates
             --mood-stressed: #b58a8a;
             --mood-frustrated: #c49090;
             --mood-sad: #9eb5c8;
-            --mood-lonely: #a8a3b8;
             --mood-worried: #a89fb8;
             --mood-confused: #b5a8a8;
             --mood-restless: #b8a8a3;
@@ -741,9 +740,6 @@ updates
 
         .mood-tag[data-mood="sad"] { color: var(--mood-sad); }
         .mood-tag[data-mood="sad"].active { background: var(--mood-sad); color: white; }
-
-        .mood-tag[data-mood="lonely"] { color: var(--mood-lonely); }
-        .mood-tag[data-mood="lonely"].active { background: var(--mood-lonely); color: white; }
 
         .mood-tag[data-mood="worried"] { color: var(--mood-worried); }
         .mood-tag[data-mood="worried"].active { background: var(--mood-worried); color: white; }
@@ -2021,7 +2017,6 @@ updates
                         <button class="mood-tag" data-mood="overwhelmed">😓 Overwhelmed</button>
                         <button class="mood-tag" data-mood="frustrated">😤 Frustrated</button>
                         <button class="mood-tag" data-mood="sad">😢 Sad</button>
-                        <button class="mood-tag" data-mood="lonely">😔 Lonely</button>
                         <button class="mood-tag" data-mood="worried">😟 Worried</button>
                         <button class="mood-tag" data-mood="confused">😕 Confused</button>
                         <button class="mood-tag" data-mood="restless">😬 Restless</button>
@@ -2200,7 +2195,7 @@ updates
             { id: 'double_photo_day', name: 'Double Vision', desc: 'Add both a kids & self photo in one entry', icon: '👯', category: 'photos', check: (stats) => stats.hasBothPhotosEntry },
 
             // Mood tracking achievements
-            { id: 'all_moods', name: 'Mood Explorer', desc: 'Experience all mood types', icon: '🎭', category: 'moods', check: (stats) => stats.uniqueMoods >= 25 },
+            { id: 'all_moods', name: 'Mood Explorer', desc: 'Experience all mood types', icon: '🎭', category: 'moods', check: (stats) => stats.uniqueMoods >= 24 },
             { id: 'positive_week', name: 'Sunshine Week', desc: 'Have 70%+ positive moods in a week', icon: '☀️', category: 'moods', check: (stats) => stats.positiveWeekPercent >= 70 },
             { id: 'balanced_month', name: 'Balanced Life', desc: 'Have a balanced mood month', icon: '⚖️', category: 'moods', check: (stats) => stats.balancedMonth },
             { id: 'mood_rainbow_10', name: 'Emotional Rainbow', desc: 'Use 10 different mood tags', icon: '🌈', category: 'moods', check: (stats) => stats.uniqueMoods >= 10 },
@@ -3929,7 +3924,7 @@ updates
             }
             // Mood achievements
             else if (achievement.id === 'all_moods') {
-                return { current: stats.uniqueMoods || 0, total: 25 };
+                return { current: stats.uniqueMoods || 0, total: 24 };
             }
             else if (achievement.id === 'mood_rainbow_10') {
                 return { current: stats.uniqueMoods || 0, total: 10 };

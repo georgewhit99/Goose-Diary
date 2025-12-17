@@ -1,4 +1,5 @@
-
+updates 2
+updates 
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -44,6 +45,7 @@
             --mood-confused: #b5a8a8;
             --mood-restless: #b8a8a3;
             --mood-inspired: #c5b5e0;
+            --mood-period: #c94c4c;
         }
 
         .dark {
@@ -754,6 +756,9 @@
 
         .mood-tag[data-mood="inspired"] { color: var(--mood-inspired); }
         .mood-tag[data-mood="inspired"].active { background: var(--mood-inspired); color: white; }
+
+        .mood-tag[data-mood="period"] { color: var(--mood-period); }
+        .mood-tag[data-mood="period"].active { background: var(--mood-period); color: white; }
 
         /* Daily Prompt */
         .daily-prompt {
@@ -2021,6 +2026,7 @@
                         <button class="mood-tag" data-mood="confused">😕 Confused</button>
                         <button class="mood-tag" data-mood="restless">😬 Restless</button>
                         <button class="mood-tag" data-mood="inspired">✨ Inspired</button>
+                        <button class="mood-tag" data-mood="period">🩸 Period</button>
                     </div>
                 </div>
 
@@ -2194,7 +2200,7 @@
             { id: 'double_photo_day', name: 'Double Vision', desc: 'Add both a kids & self photo in one entry', icon: '👯', category: 'photos', check: (stats) => stats.hasBothPhotosEntry },
 
             // Mood tracking achievements
-            { id: 'all_moods', name: 'Mood Explorer', desc: 'Experience all mood types', icon: '🎭', category: 'moods', check: (stats) => stats.uniqueMoods >= 24 },
+            { id: 'all_moods', name: 'Mood Explorer', desc: 'Experience all mood types', icon: '🎭', category: 'moods', check: (stats) => stats.uniqueMoods >= 25 },
             { id: 'positive_week', name: 'Sunshine Week', desc: 'Have 70%+ positive moods in a week', icon: '☀️', category: 'moods', check: (stats) => stats.positiveWeekPercent >= 70 },
             { id: 'balanced_month', name: 'Balanced Life', desc: 'Have a balanced mood month', icon: '⚖️', category: 'moods', check: (stats) => stats.balancedMonth },
             { id: 'mood_rainbow_10', name: 'Emotional Rainbow', desc: 'Use 10 different mood tags', icon: '🌈', category: 'moods', check: (stats) => stats.uniqueMoods >= 10 },
@@ -3923,7 +3929,7 @@
             }
             // Mood achievements
             else if (achievement.id === 'all_moods') {
-                return { current: stats.uniqueMoods || 0, total: 24 };
+                return { current: stats.uniqueMoods || 0, total: 25 };
             }
             else if (achievement.id === 'mood_rainbow_10') {
                 return { current: stats.uniqueMoods || 0, total: 10 };

@@ -1,4 +1,4 @@
-Goose <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -655,31 +655,132 @@ Goose <!DOCTYPE html>
         }
 
         /* Mood Tags */
-        .mood-tags {
+        .mood-categories {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 0.5rem;
+            gap: 0.4rem;
+        }
+
+        .mood-category {
+            display: flex;
+            flex-direction: column;
+            gap: 0.35rem;
+        }
+
+        .mood-category-header {
+            font-family: 'Fraunces', serif;
+            font-size: 0.65rem;
+            font-weight: 600;
+            text-align: center;
+            padding: 0.25rem 0.4rem;
+            border-radius: 0.5rem;
+            letter-spacing: 0.02em;
+        }
+
+        .mood-category.positive .mood-category-header {
+            background: linear-gradient(135deg, rgba(246, 200, 95, 0.2), rgba(107, 181, 160, 0.2));
+            color: var(--mood-happy);
+        }
+
+        .dark .mood-category.positive .mood-category-header {
+            background: linear-gradient(135deg, rgba(246, 200, 95, 0.15), rgba(107, 181, 160, 0.15));
+        }
+
+        .mood-category.neutral .mood-category-header {
+            background: linear-gradient(135deg, rgba(168, 197, 185, 0.25), rgba(168, 197, 224, 0.25));
+            color: var(--mood-calm);
+        }
+
+        .dark .mood-category.neutral .mood-category-header {
+            background: linear-gradient(135deg, rgba(168, 197, 185, 0.15), rgba(168, 197, 224, 0.15));
+        }
+
+        .mood-category.negative .mood-category-header {
+            background: linear-gradient(135deg, rgba(196, 145, 139, 0.2), rgba(139, 127, 168, 0.2));
+            color: var(--mood-stressed);
+        }
+
+        .dark .mood-category.negative .mood-category-header {
+            background: linear-gradient(135deg, rgba(196, 145, 139, 0.15), rgba(139, 127, 168, 0.15));
+        }
+
+        .mood-tags {
+            display: flex;
+            flex-direction: column;
+            gap: 0.3rem;
         }
 
         .mood-tag {
-            padding: 0.5rem 0.75rem;
-            border-radius: 1.5rem;
+            padding: 0.35rem 0.4rem;
+            border-radius: 1rem;
             border: 2px solid var(--color-border);
             background: var(--color-bg);
             cursor: pointer;
             transition: all 0.2s ease;
-            font-size: 0.85rem;
+            font-size: 0.7rem;
             font-weight: 500;
             text-align: center;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .mood-tag:hover {
-            transform: translateY(-2px);
+            transform: translateY(-1px);
         }
 
         .mood-tag.active {
             border-color: currentColor;
-            transform: translateY(-2px);
+            transform: translateY(-1px);
+        }
+
+        /* Larger screens: more breathing room */
+        @media (min-width: 400px) {
+            .mood-categories {
+                gap: 0.6rem;
+            }
+
+            .mood-category {
+                gap: 0.4rem;
+            }
+
+            .mood-category-header {
+                font-size: 0.75rem;
+                padding: 0.35rem 0.5rem;
+            }
+
+            .mood-tags {
+                gap: 0.35rem;
+            }
+
+            .mood-tag {
+                padding: 0.45rem 0.5rem;
+                font-size: 0.78rem;
+            }
+        }
+
+        @media (min-width: 500px) {
+            .mood-categories {
+                gap: 1rem;
+            }
+
+            .mood-category {
+                gap: 0.5rem;
+            }
+
+            .mood-category-header {
+                font-size: 0.8rem;
+                padding: 0.4rem 0.6rem;
+            }
+
+            .mood-tags {
+                gap: 0.4rem;
+            }
+
+            .mood-tag {
+                padding: 0.5rem 0.6rem;
+                font-size: 0.85rem;
+            }
         }
 
         .mood-tag[data-mood="anxious"] { color: var(--mood-anxious); }
@@ -1995,31 +2096,49 @@ Goose <!DOCTYPE html>
                 <!-- Mood Tags -->
                 <div class="section-card">
                     <h2 class="section-title">Today I felt...</h2>
-                    <div class="mood-tags" id="moodTags">
-                        <button class="mood-tag" data-mood="happy">😊 Happy</button>
-                        <button class="mood-tag" data-mood="joyful">🌟 Joyful</button>
-                        <button class="mood-tag" data-mood="grateful">🙏 Grateful</button>
-                        <button class="mood-tag" data-mood="proud">🏆 Proud</button>
-                        <button class="mood-tag" data-mood="motivated">💪 Motivated</button>
-                        <button class="mood-tag" data-mood="energetic">⚡ Energetic</button>
-                        <button class="mood-tag" data-mood="peaceful">😌 Peaceful</button>
-                        <button class="mood-tag" data-mood="calm">🧘 Calm</button>
-                        <button class="mood-tag" data-mood="excited">🎉 Excited</button>
-                        <button class="mood-tag" data-mood="hopeful">🌈 Hopeful</button>
-                        <button class="mood-tag" data-mood="loved">💕 Loved</button>
-                        <button class="mood-tag" data-mood="content">☺️ Content</button>
-                        <button class="mood-tag" data-mood="tired">😴 Tired</button>
-                        <button class="mood-tag" data-mood="exhausted">😫 Exhausted</button>
-                        <button class="mood-tag" data-mood="anxious">😰 Anxious</button>
-                        <button class="mood-tag" data-mood="stressed">😣 Stressed</button>
-                        <button class="mood-tag" data-mood="overwhelmed">😓 Overwhelmed</button>
-                        <button class="mood-tag" data-mood="frustrated">😤 Frustrated</button>
-                        <button class="mood-tag" data-mood="sad">😢 Sad</button>
-                        <button class="mood-tag" data-mood="worried">😟 Worried</button>
-                        <button class="mood-tag" data-mood="confused">😕 Confused</button>
-                        <button class="mood-tag" data-mood="restless">😬 Restless</button>
-                        <button class="mood-tag" data-mood="inspired">✨ Inspired</button>
-                        <button class="mood-tag" data-mood="period">🩸 Period</button>
+                    <div class="mood-categories" id="moodTags">
+                        <!-- Positive Moods -->
+                        <div class="mood-category positive">
+                            <div class="mood-category-header">Positive</div>
+                            <div class="mood-tags">
+                                <button class="mood-tag" data-mood="happy">😊 Happy</button>
+                                <button class="mood-tag" data-mood="joyful">🌟 Joyful</button>
+                                <button class="mood-tag" data-mood="grateful">🙏 Grateful</button>
+                                <button class="mood-tag" data-mood="proud">🏆 Proud</button>
+                                <button class="mood-tag" data-mood="motivated">💪 Motivated</button>
+                                <button class="mood-tag" data-mood="energetic">⚡ Energetic</button>
+                                <button class="mood-tag" data-mood="excited">🎉 Excited</button>
+                                <button class="mood-tag" data-mood="loved">💕 Loved</button>
+                            </div>
+                        </div>
+                        <!-- Neutral Moods -->
+                        <div class="mood-category neutral">
+                            <div class="mood-category-header">Neutral</div>
+                            <div class="mood-tags">
+                                <button class="mood-tag" data-mood="peaceful">😌 Peaceful</button>
+                                <button class="mood-tag" data-mood="calm">🧘 Calm</button>
+                                <button class="mood-tag" data-mood="hopeful">🌈 Hopeful</button>
+                                <button class="mood-tag" data-mood="content">☺️ Content</button>
+                                <button class="mood-tag" data-mood="tired">😴 Tired</button>
+                                <button class="mood-tag" data-mood="inspired">✨ Inspired</button>
+                                <button class="mood-tag" data-mood="confused">😕 Confused</button>
+                                <button class="mood-tag" data-mood="period">🩸 Period</button>
+                            </div>
+                        </div>
+                        <!-- Negative Moods -->
+                        <div class="mood-category negative">
+                            <div class="mood-category-header">Negative</div>
+                            <div class="mood-tags">
+                                <button class="mood-tag" data-mood="exhausted">😫 Exhausted</button>
+                                <button class="mood-tag" data-mood="anxious">😰 Anxious</button>
+                                <button class="mood-tag" data-mood="stressed">😣 Stressed</button>
+                                <button class="mood-tag" data-mood="overwhelmed">😓 Overwhelmed</button>
+                                <button class="mood-tag" data-mood="frustrated">😤 Frustrated</button>
+                                <button class="mood-tag" data-mood="sad">😢 Sad</button>
+                                <button class="mood-tag" data-mood="worried">😟 Worried</button>
+                                <button class="mood-tag" data-mood="restless">😬 Restless</button>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -4087,4 +4206,4 @@ Goose <!DOCTYPE html>
         }
     </script>
     </body>
-    </html>
+</html>

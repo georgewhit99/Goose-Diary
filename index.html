@@ -1128,6 +1128,90 @@
             font-weight: 600;
         }
 
+        /* Period Tracker Styles */
+        .period-tracker-card {
+            background: linear-gradient(135deg, var(--color-surface) 0%, rgba(201, 76, 76, 0.05) 100%);
+            border: 1px solid rgba(201, 76, 76, 0.2);
+        }
+
+        .dark .period-tracker-card {
+            background: linear-gradient(135deg, var(--color-surface) 0%, rgba(201, 76, 76, 0.1) 100%);
+        }
+
+        .period-tracker-card.hidden {
+            display: none;
+        }
+
+        .period-tracker-content {
+            text-align: center;
+        }
+
+        .period-cycle-display {
+            padding: 1.5rem;
+            background: var(--color-bg);
+            border-radius: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .period-day-count {
+            font-family: 'Fraunces', serif;
+            font-size: 3.5rem;
+            font-weight: 700;
+            color: var(--mood-period);
+            line-height: 1;
+            margin-bottom: 0.25rem;
+        }
+
+        .period-day-label {
+            color: var(--color-text-secondary);
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .period-info {
+            margin-bottom: 1rem;
+        }
+
+        .period-last-date {
+            color: var(--color-text-secondary);
+            font-size: 0.85rem;
+            font-style: italic;
+        }
+
+        .period-cycle-bar {
+            position: relative;
+            height: 12px;
+            background: var(--color-bg);
+            border-radius: 6px;
+            overflow: hidden;
+            margin-bottom: 0.5rem;
+        }
+
+        .period-cycle-progress {
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            background: linear-gradient(90deg, var(--mood-period) 0%, #e88a8a 50%, #f5b5b5 100%);
+            border-radius: 6px;
+            transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .period-cycle-markers {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.7rem;
+            color: var(--color-text-secondary);
+            padding: 0 0.25rem;
+        }
+
+        .period-no-data {
+            color: var(--color-text-secondary);
+            font-size: 0.9rem;
+            padding: 1rem;
+            text-align: center;
+        }
+
         .word-cloud {
             display: flex;
             flex-wrap: wrap;
@@ -2217,6 +2301,27 @@
                     <div class="stat-row">
                         <span class="stat-label">Total Entries</span>
                         <span class="stat-value" id="monthlyEntryCount">0</span>
+                    </div>
+                </div>
+
+                <div class="dashboard-card period-tracker-card" id="periodTrackerCard">
+                    <h2 class="dashboard-title">🩸 Period Tracker</h2>
+                    <div class="period-tracker-content">
+                        <div class="period-cycle-display">
+                            <div class="period-day-count" id="periodDayCount">-</div>
+                            <div class="period-day-label">days since last period</div>
+                        </div>
+                        <div class="period-info" id="periodInfo">
+                            <span class="period-last-date" id="periodLastDate"></span>
+                        </div>
+                        <div class="period-cycle-bar">
+                            <div class="period-cycle-progress" id="periodCycleProgress"></div>
+                            <div class="period-cycle-markers">
+                                <span>0</span>
+                                <span>14</span>
+                                <span>28</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -3465,6 +3570,9 @@
             } else {
                 photosEl.innerHTML = '<p style="color: var(--color-text-secondary); text-align: center; padding: 2rem;">No photos this month</p>';
             }
+
+            // Update period tracker
+            await updatePeriodTracker();
         }
 
         function extractMoodWords(entries) {
@@ -3480,6 +3588,51 @@
 
             return Object.entries(moodCount)
                 .sort((a, b) => b[1] - a[1]);
+        }
+
+        // Period Tracker - find last period mood and calculate days since
+        async function updatePeriodTracker() {
+            const entriesObj = await getAllEntriesFromDB();
+            const entries = Object.values(entriesObj);
+
+            // Find entries with "period" mood, sorted by date descending
+            const periodEntries = entries
+                .filter(e => e.moods && e.moods.includes('period'))
+                .sort((a, b) => new Date(b.date) - new Date(a.date));
+
+            const trackerCard = document.getElementById('periodTrackerCard');
+            const dayCountEl = document.getElementById('periodDayCount');
+            const lastDateEl = document.getElementById('periodLastDate');
+            const progressEl = document.getElementById('periodCycleProgress');
+
+            if (periodEntries.length === 0) {
+                // No period mood ever logged - show helpful message
+                dayCountEl.textContent = '-';
+                lastDateEl.textContent = 'Log the "period" mood to start tracking';
+                progressEl.style.width = '0%';
+                return;
+            }
+
+            // Calculate days since last period
+            const lastPeriodDate = new Date(periodEntries[0].date);
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            lastPeriodDate.setHours(0, 0, 0, 0);
+
+            const daysSince = Math.floor((today - lastPeriodDate) / (1000 * 60 * 60 * 24));
+
+            // Update the display
+            dayCountEl.textContent = daysSince;
+
+            // Format the last period date nicely
+            const dateOptions = { weekday: 'short', month: 'short', day: 'numeric' };
+            const formattedDate = lastPeriodDate.toLocaleDateString('en-US', dateOptions);
+            lastDateEl.textContent = `Last period: ${formattedDate}`;
+
+            // Update progress bar (based on typical 28-day cycle)
+            const cycleLength = 28;
+            const progressPercent = Math.min((daysSince / cycleLength) * 100, 100);
+            progressEl.style.width = `${progressPercent}%`;
         }
 
         function getMoodSentiment(entries) {

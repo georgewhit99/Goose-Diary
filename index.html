@@ -2597,18 +2597,31 @@
             const today = new Date();
             today.setHours(0, 0, 0, 0);
 
-            // Check if there's an entry for today
+            const yesterday = new Date(today);
+            yesterday.setDate(yesterday.getDate() - 1);
+
+            // Check if there's an entry for today or yesterday
             const todayStr = today.toDateString();
+            const yesterdayStr = yesterday.toDateString();
             const hasToday = entries[todayStr] !== undefined;
+            const hasYesterday = entries[yesterdayStr] !== undefined;
+
+            // If no entry today AND no entry yesterday, streak is broken
+            if (!hasToday && !hasYesterday) {
+                return 0;
+            }
 
             let streak = 0;
             let checkDate = new Date(today);
 
-            // If there's an entry today, start streak from today
-            // If no entry today, streak must start from yesterday or earlier
+            // If there's an entry today, start counting from today
             if (hasToday) {
                 streak = 1;
                 checkDate.setDate(checkDate.getDate() - 1);
+            } else {
+                // No entry today, but there's one yesterday - start from yesterday
+                // The streak is still active until today ends
+                checkDate = new Date(yesterday);
             }
 
             // Count backwards day by day
@@ -4080,7 +4093,7 @@
                 'moods': { title: '😊 Moods & Emotions', icon: '😊' },
                 'time': { title: '⏰ Time & Timing', icon: '⏰' },
                 'writing': { title: '✍️ Writing', icon: '✍️' },
-                'special': { title: '⭐ Special', icon: '⭐' },
+                'special': { title: '��� Special', icon: '⭐' },
                 'fun': { title: '🎮 Fun & Discovery', icon: '🎮' }
             };
 

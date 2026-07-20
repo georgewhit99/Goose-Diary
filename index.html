@@ -160,6 +160,14 @@
   .pace-guide td:last-child{text-align:right; font-family:'JetBrains Mono',monospace; font-weight:600;}
   .pace-guide .pg-foot{color:var(--muted); font-size:11.5px; margin-top:8px; line-height:1.5;}
 
+  .summary-section{padding:4px 20px 4px;}
+  .summary-section h3{font-size:12px; color:var(--muted); letter-spacing:0.08em; margin:0 0 10px;}
+  .summary-card{background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:14px; margin-bottom:10px;}
+  .summary-card .sum-head{font-size:11px; color:var(--amber); letter-spacing:0.06em; font-weight:700; margin-bottom:6px;}
+  .summary-card p{font-size:13px; line-height:1.55; margin:0; color:var(--text);}
+  .summary-card.pending p{color:var(--muted); font-style:italic;}
+  .empty-note{color:var(--muted); font-size:12.5px; text-align:center; padding:14px 0;}
+
   .ex-row{padding:12px 0; border-top:1px solid var(--line);}
   .ex-top{display:flex; align-items:center; gap:12px;}
   .ex-check{width:22px; height:22px; border-radius:6px; border:1.5px solid var(--rest); flex:0 0 auto; display:flex; align-items:center; justify-content:center; cursor:pointer; transition:all .15s;}
@@ -167,11 +175,9 @@
   .ex-body{flex:1;}
   .ex-name{font-size:14.5px; font-weight:500;}
   .ex-name.checked{color:var(--muted); text-decoration:line-through;}
-  .ex-meta{font-size:12px; color:var(--muted); font-family:'JetBrains Mono',monospace; margin-top:2px;}
+  .ex-meta-input{background:transparent; border:none; border-bottom:1px dashed var(--line); color:var(--muted); font-family:'JetBrains Mono',monospace; font-size:12px; padding:2px 0; margin-top:3px; width:100%; max-width:220px; outline:none;}
+  .ex-meta-input:focus{border-bottom-color:var(--accent); color:var(--text);}
   .ex-controls{display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin:10px 0 0 34px;}
-  .ex-weight{display:flex; align-items:center; gap:4px; background:var(--surface-2); border:1px solid var(--line); border-radius:8px; padding:5px 9px;}
-  .ex-weight input{width:42px; background:transparent; border:none; color:var(--text); font-family:'JetBrains Mono',monospace; font-size:13px; outline:none;}
-  .ex-weight span{font-size:11px; color:var(--muted);}
   .diff-group{display:flex; gap:4px;}
   .diff-btn{padding:6px 9px; border-radius:7px; font-size:11px; font-weight:600; border:1px solid var(--line); background:var(--surface-2); color:var(--muted); cursor:pointer;}
   .diff-btn.active-easy{background:rgba(111,207,151,0.18); border-color:var(--good); color:var(--good);}
@@ -242,14 +248,14 @@
           <input type="number" step="0.1" id="in-weight" placeholder="97.0">
         </div>
         <div class="field">
-          <label>WAIST (CM)</label>
-          <input type="number" step="0.1" id="in-waist" placeholder="94.0">
+          <label>DISTANCE RAN (KM)</label>
+          <input type="number" step="0.1" id="in-distance" placeholder="8.0">
         </div>
       </div>
       <div class="field-row">
         <div class="field">
-          <label>MAIN LIFTS TOTAL (KG)</label>
-          <input type="number" step="1" id="in-lift" placeholder="e.g. squat+row+press top sets">
+          <label>KG LIFTED THIS WEEK</label>
+          <input type="number" step="1" id="in-lift" placeholder="total volume estimate">
         </div>
       </div>
       <button class="btn-primary" onclick="addMetricEntry()">Save entry</button>
@@ -261,12 +267,12 @@
       <div class="chart-box"><canvas id="chart-weight"></canvas></div>
     </div>
     <div class="chart-card">
-      <h3>WAIST</h3>
-      <div id="waist-latest" class="latest">—</div>
-      <div class="chart-box"><canvas id="chart-waist"></canvas></div>
+      <h3>DISTANCE RAN</h3>
+      <div id="distance-latest" class="latest">—</div>
+      <div class="chart-box"><canvas id="chart-distance"></canvas></div>
     </div>
     <div class="chart-card">
-      <h3>STRENGTH TOTAL</h3>
+      <h3>KG LIFTED</h3>
       <div id="lift-latest" class="latest">—</div>
       <div class="chart-box"><canvas id="chart-lift"></canvas></div>
     </div>
@@ -275,6 +281,10 @@
   <div id="photos-view" style="display:none;">
     <div class="photo-intro">Add one photo a week to actually see the change — the scale won't show it as clearly as this will. Tap a slot to add or replace a photo.</div>
     <div class="photo-grid" id="photo-grid"></div>
+    <div class="summary-section">
+      <h3>PROGRESS NOTES</h3>
+      <div id="summary-list"></div>
+    </div>
     <div class="compare-card">
       <h3>COMPARE WEEKS</h3>
       <div class="compare-selects">
@@ -322,20 +332,28 @@
 /* ---------- Plan data ---------- */
 const abCircuits = [
   [ {n:'Hanging leg raises', m:'3 × 10–15'}, {n:'Plank', m:'3 × 45–60s'}, {n:'DB Russian twists', m:'3 × 15/side'} ],
-  [ {n:'Ab wheel rollout', m:'3 × 10–12'}, {n:'Side plank', m:'3 × 30–40s/side'}, {n:'Slow mountain climbers', m:'3 × 12/side'} ],
-  [ {n:'Hanging knee raises', m:'3 × 12–15'}, {n:'Plank shoulder taps', m:'3 × 40s'}, {n:'Cable/band woodchoppers', m:'3 × 15/side'} ],
+  [ {n:'Hollow body hold', m:'3 × 30–40s'}, {n:'Side plank', m:'3 × 30–40s/side'}, {n:'Slow mountain climbers', m:'3 × 12/side'} ],
+  [ {n:'Hanging knee raises', m:'3 × 12–15'}, {n:'Plank shoulder taps', m:'3 × 40s'}, {n:'DB woodchoppers', m:'3 × 15/side'} ],
   [ {n:'Hanging leg raises', m:'3 × max'}, {n:'Plank', m:'3 × 60s'}, {n:'Weighted DB sit-ups', m:'3 × 12' } ]
 ];
 function abCircuitFor(week){ return abCircuits[(week-1) % abCircuits.length]; }
 
-// Run pace guide, built off a 20:00 5k PB (4:00/km)
-const runPaces = [
-  {label:'Easy / recovery', pace:'5:10–5:20 /km'},
-  {label:'Steady', pace:'4:40–4:50 /km'},
-  {label:'Tempo effort', pace:'4:15–4:25 /km'},
-  {label:'5k race pace (your PB)', pace:'4:00 /km'},
-  {label:'Long, relaxed run', pace:'5:15–5:30 /km'}
+// Run workouts — rotate weekly, built off a 20:00 5k PB (4:00/km)
+const runWorkouts = [
+  { title:'Easy Aerobic Run', tag:'RECOVERY BASE',
+    rows:[ ['Warm-up','5 min easy jog'], ['Main set','8km continuous @ 5:10–5:30/km'], ['Cool-down','5 min walk'] ],
+    note:'Conversational pace, nose-breathing effort. This run should aid recovery from lifting and football, not add fatigue on top of it.' },
+  { title:'Tempo 5K', tag:'THRESHOLD',
+    rows:[ ['Warm-up','10 min easy jog (~1.8km)'], ['Main set','5km @ 4:15–4:25/km — "comfortably hard"'], ['Cool-down','5–10 min easy jog'] ],
+    note:'Raises your lactate threshold and builds the strength-endurance that carries into 90 minutes of football.' },
+  { title:'Interval Session', tag:'SPEED / VO2',
+    rows:[ ['Warm-up','10 min easy jog + 4 × 20s strides'], ['Main set','6 × 800m @ 3:50–4:00/km, 90s jog recovery'], ['Cool-down','10 min easy jog'] ],
+    note:'Sharpens top-end speed and repeat-effort capacity for football, and sets you up for a fresh 5k PB attempt later in the block.' },
+  { title:'Long Steady Run', tag:'ENDURANCE',
+    rows:[ ['Main set','12–14km @ 5:15–5:30/km'], ['Optional','Negative-split the last 2km if it feels good'] ],
+    note:'You can already comfortably run past 5k — this builds the aerobic base to back that up long-term.' }
 ];
+function runWorkoutFor(week){ return runWorkouts[(week-1) % runWorkouts.length]; }
 
 function dayTemplates(week){
   const ab = abCircuitFor(week);
@@ -347,7 +365,7 @@ function dayTemplates(week){
         {n:'DB shoulder press', m:'4 × 10–12'},
         {n:'DB bent-over row', m:'4 × 10–12'},
         {n:'DB incline / floor press', m:'3 × 12'},
-        {n:'Face pulls / band pull-aparts', m:'3 × 15'},
+        {n:'DB rear-delt flyes', m:'3 × 15'},
         ...ab
       ]},
     { key:'tue', label:'TUE', type:'strength', title:'Lower Body', icon:'🦵',
@@ -377,9 +395,9 @@ function dayTemplates(week){
         ...ab
       ]},
     { key:'fri', label:'FRI', type:'run', title:'Run + Core', icon:'🏃', runGuide:true,
-      note:'Your run for the week. Build distance gradually — you\'ve got the base for it. Add 10–15 min of core if you\'re fresh, skip it if not.',
+      note:'Your run for the week — session detail below. Add 10–15 min of core if you\'re fresh, skip it if not.',
       exercises:[
-        {n:'Run — pace guide below', m:'—'},
+        {n:'Run — see session below', m:'—'},
         ...ab
       ]},
     { key:'sat', label:'SAT', type:'rest', title:'Rest', icon:'🛌',
@@ -395,29 +413,32 @@ function dayTemplates(week){
 
 /* ---------- State ---------- */
 const TOTAL_WEEKS = 12;
-let state = { currentWeek:1, completedDays:{}, exerciseData:{}, metrics:[], photos:{} };
+let state = { currentWeek:1, completedDays:{}, exerciseData:{}, exerciseLinks:{}, metrics:[], photos:{}, photoSummaries:{} };
 let activeDayKey = null;
 let charts = {};
 
 async function loadState(){
   try{
-    const res = await window.storage.get('plan-state-v2');
+    const res = await window.storage.get('plan-state-v3');
     if(res && res.value){
       const parsed = JSON.parse(res.value);
       state = Object.assign(state, parsed);
       state.exerciseData = parsed.exerciseData || {};
+      state.exerciseLinks = parsed.exerciseLinks || {};
       state.photos = parsed.photos || {};
+      state.photoSummaries = parsed.photoSummaries || {};
     }
   }catch(e){ /* no saved state yet */ }
 }
 async function saveState(){
-  try{ await window.storage.set('plan-state-v2', JSON.stringify(state)); }
+  try{ await window.storage.set('plan-state-v3', JSON.stringify(state)); }
   catch(e){ console.error('save failed', e); }
 }
 
 function dayId(week, key){ return `${week}-${key}`; }
-function exData(checkId){
-  if(!state.exerciseData[checkId]) state.exerciseData[checkId] = { done:false, weight:'', difficulty:'', link:'' };
+function exData(checkId, defaultMeta){
+  if(!state.exerciseData[checkId]) state.exerciseData[checkId] = { done:false, difficulty:'', meta: defaultMeta };
+  if(state.exerciseData[checkId].meta == null) state.exerciseData[checkId].meta = defaultMeta;
   return state.exerciseData[checkId];
 }
 
@@ -488,11 +509,12 @@ function openModal(d){
 
   const paceContainer = document.getElementById('pace-guide-container');
   if(d.runGuide){
+    const rw = runWorkoutFor(state.currentWeek);
     paceContainer.innerHTML = `
       <div class="pace-guide">
-        <div class="pg-title">RUN PACE GUIDE — BASED ON YOUR 20:00 5K PB</div>
-        <table>${runPaces.map(p=>`<tr><td>${p.label}</td><td>${p.pace}</td></tr>`).join('')}</table>
-        <div class="pg-foot">Most weeks: easy-to-steady effort, building distance since you can comfortably go further than 5k. Every few weeks, swap in a tempo effort or a fresh 5k attempt if legs feel good.</div>
+        <div class="pg-title">THIS WEEK'S RUN — ${rw.title.toUpperCase()} <span style="color:var(--muted); font-weight:500;">· ${rw.tag}</span></div>
+        <table>${rw.rows.map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td></tr>`).join('')}</table>
+        <div class="pg-foot">${rw.note} Paces are based on your 20:00 5k PB (4:00/km).</div>
       </div>`;
   } else {
     paceContainer.innerHTML = '';
@@ -503,38 +525,35 @@ function openModal(d){
   const id = dayId(state.currentWeek, d.key);
   d.exercises.forEach((ex, i)=>{
     const checkId = `${id}::${i}`;
-    const ed = exData(checkId);
+    const ed = exData(checkId, ex.m);
+    const linkVal = state.exerciseLinks[ex.n] || '';
     const row = document.createElement('div');
     row.className = 'ex-row';
     row.innerHTML = `
       <div class="ex-top">
-        <div class="ex-check ${ed.done?'checked':''}" data-check="${checkId}">${ed.done?'✓':''}</div>
+        <div class="ex-check ${ed.done?'checked':''}">${ed.done?'✓':''}</div>
         <div class="ex-body">
           <div class="ex-name ${ed.done?'checked':''}">${ex.n}</div>
-          <div class="ex-meta">${ex.m}</div>
+          <input type="text" class="ex-meta-input" value="${ed.meta}">
         </div>
       </div>
       <div class="ex-controls">
-        <div class="ex-weight">
-          <input type="number" step="0.5" placeholder="wt" value="${ed.weight}" data-weight="${checkId}">
-          <span>kg</span>
-        </div>
         <div class="diff-group">
-          <div class="diff-btn ${ed.difficulty==='easy'?'active-easy':''}" data-diff="${checkId}" data-val="easy">Easy</div>
-          <div class="diff-btn ${ed.difficulty==='right'?'active-right':''}" data-diff="${checkId}" data-val="right">Right</div>
-          <div class="diff-btn ${ed.difficulty==='hard'?'active-hard':''}" data-diff="${checkId}" data-val="hard">Hard</div>
+          <div class="diff-btn ${ed.difficulty==='easy'?'active-easy':''}" data-val="easy">Easy</div>
+          <div class="diff-btn ${ed.difficulty==='right'?'active-right':''}" data-val="right">Right</div>
+          <div class="diff-btn ${ed.difficulty==='hard'?'active-hard':''}" data-val="hard">Hard</div>
         </div>
       </div>
       <div class="ex-link-row">
-        <input type="url" placeholder="Paste TikTok link for this exercise" value="${ed.link || ''}" data-link="${checkId}">
-        ${ed.link ? `<a class="link-btn" href="${ed.link}" target="_blank" rel="noopener">▶</a>` : ''}
+        <input type="url" class="ex-link-input" placeholder="Paste TikTok link for this exercise" value="${linkVal}">
+        ${linkVal ? `<a class="link-btn" href="${linkVal}" target="_blank" rel="noopener">▶</a>` : ''}
       </div>`;
     row.querySelector('.ex-check').onclick = ()=> toggleExerciseDone(checkId);
     row.querySelectorAll('.diff-btn').forEach(btn=>{
       btn.onclick = ()=> setDifficulty(checkId, btn.dataset.val);
     });
-    row.querySelector('[data-weight]').onchange = (e)=> setWeight(checkId, e.target.value);
-    row.querySelector('[data-link]').onchange = (e)=> setLink(checkId, e.target.value);
+    row.querySelector('.ex-meta-input').onchange = (e)=> setMeta(checkId, e.target.value);
+    row.querySelector('.ex-link-input').onchange = (e)=> setLink(ex.n, e.target.value);
     list.appendChild(row);
   });
 
@@ -566,16 +585,18 @@ function setDifficulty(checkId, val){
   saveState();
   refreshModal();
 }
-function setWeight(checkId, val){
+function setMeta(checkId, val){
   const ed = exData(checkId);
-  ed.weight = val;
+  ed.meta = val;
   saveState();
 }
-function setLink(checkId, val){
-  const ed = exData(checkId);
-  ed.link = val.trim();
+function setLink(exerciseName, val){
+  val = val.trim();
+  if(val) state.exerciseLinks[exerciseName] = val;
+  else delete state.exerciseLinks[exerciseName];
   saveState();
   refreshModal();
+  showToast(val ? 'Link saved — applied to this exercise everywhere' : 'Link removed');
 }
 function toggleDayComplete(){
   if(!activeDayKey) return;
@@ -604,9 +625,9 @@ function switchTab(tab){
 /* ---------- Metrics ---------- */
 async function addMetricEntry(){
   const weight = parseFloat(document.getElementById('in-weight').value);
-  const waist = parseFloat(document.getElementById('in-waist').value);
+  const distance = parseFloat(document.getElementById('in-distance').value);
   const lift = parseFloat(document.getElementById('in-lift').value);
-  if(isNaN(weight) && isNaN(waist) && isNaN(lift)){
+  if(isNaN(weight) && isNaN(distance) && isNaN(lift)){
     showToast('Enter at least one value');
     return;
   }
@@ -614,12 +635,12 @@ async function addMetricEntry(){
     date: new Date().toISOString(),
     week: state.currentWeek,
     weight: isNaN(weight)?null:weight,
-    waist: isNaN(waist)?null:waist,
+    distance: isNaN(distance)?null:distance,
     lift: isNaN(lift)?null:lift
   });
   await saveState();
   document.getElementById('in-weight').value = '';
-  document.getElementById('in-waist').value = '';
+  document.getElementById('in-distance').value = '';
   document.getElementById('in-lift').value = '';
   showToast('Entry saved');
   renderMetrics();
@@ -657,15 +678,15 @@ function buildChart(canvasId, points, color, unit){
 
 function renderMetrics(){
   const weightPts = state.metrics.filter(m=>m.weight!=null).map(m=>({week:m.week, value:m.weight}));
-  const waistPts = state.metrics.filter(m=>m.waist!=null).map(m=>({week:m.week, value:m.waist}));
+  const distancePts = state.metrics.filter(m=>m.distance!=null).map(m=>({week:m.week, value:m.distance}));
   const liftPts = state.metrics.filter(m=>m.lift!=null).map(m=>({week:m.week, value:m.lift}));
 
   document.getElementById('weight-latest').innerHTML = weightPts.length ? `${weightPts[weightPts.length-1].value}<span>kg</span>` : '—';
-  document.getElementById('waist-latest').innerHTML = waistPts.length ? `${waistPts[waistPts.length-1].value}<span>cm</span>` : '—';
-  document.getElementById('lift-latest').innerHTML = liftPts.length ? `${liftPts[liftPts.length-1].value}<span>kg total</span>` : '—';
+  document.getElementById('distance-latest').innerHTML = distancePts.length ? `${distancePts[distancePts.length-1].value}<span>km</span>` : '—';
+  document.getElementById('lift-latest').innerHTML = liftPts.length ? `${liftPts[liftPts.length-1].value}<span>kg</span>` : '—';
 
   buildChart('chart-weight', weightPts, '#E4572E', 'kg');
-  buildChart('chart-waist', waistPts, '#F2C14E', 'cm');
+  buildChart('chart-distance', distancePts, '#F2C14E', 'km');
   buildChart('chart-lift', liftPts, '#6FCF97', 'kg');
 }
 
@@ -688,7 +709,6 @@ function renderPhotos(){
     const input = document.createElement('input');
     input.type = 'file';
     input.accept = 'image/*';
-    input.capture = 'environment';
     input.id = `file-input-${w}`;
     input.onchange = (e)=> handlePhotoFile(w, e.target.files[0]);
     slot.appendChild(input);
@@ -696,6 +716,7 @@ function renderPhotos(){
   }
   populateCompareSelects();
   renderCompare();
+  renderSummaries();
 }
 function triggerUpload(week){
   document.getElementById(`file-input-${week}`).click();
@@ -718,6 +739,7 @@ function handlePhotoFile(week, file){
       saveState();
       renderPhotos();
       showToast(`Photo saved for week ${week}`);
+      requestProgressSummary(week);
     };
     img.src = e.target.result;
   };
@@ -725,9 +747,70 @@ function handlePhotoFile(week, file){
 }
 function deletePhoto(week){
   delete state.photos[week];
+  delete state.photoSummaries[week];
   saveState();
   renderPhotos();
   showToast(`Photo removed for week ${week}`);
+}
+
+/* ---------- Progress summary (AI comparison) ---------- */
+async function requestProgressSummary(week){
+  const priorWeeks = Object.keys(state.photos).map(Number).filter(w => w < week).sort((a,b)=>b-a);
+  if(priorWeeks.length === 0) return; // nothing to compare the first photo against yet
+  const prevWeek = priorWeeks[0];
+
+  state.photoSummaries[week] = { prevWeek, text:'Analyzing this week\'s photo against week ' + prevWeek + '…', pending:true };
+  renderSummaries();
+
+  try{
+    const b64Current = state.photos[week].split(',')[1];
+    const b64Prev = state.photos[prevWeek].split(',')[1];
+    const response = await fetch("https://api.anthropic.com/v1/messages", {
+      method:"POST",
+      headers:{ "Content-Type":"application/json" },
+      body: JSON.stringify({
+        model:"claude-sonnet-4-6",
+        max_tokens:1000,
+        messages:[{
+          role:"user",
+          content:[
+            {type:"text", text:`These are two physique progress photos from the same person's 12-week body recomposition program (starting point: 34-year-old male, 97kg, ~25% body fat, goal is lean and strong with more definition). Photo 1 is from week ${prevWeek}, photo 2 is from week ${week}. Give a short, honest, specific assessment of visible physical change between the two — waist/midsection, shoulders and arms, overall leanness and posture. Be direct and not falsely encouraging: if the visible change is minimal or hard to judge from these photos (lighting, angle, pose differences), say so plainly rather than manufacturing progress. Keep it to 3-4 sentences, plain language, no bullet points, no headers.`},
+            {type:"image", source:{type:"base64", media_type:"image/jpeg", data:b64Prev}},
+            {type:"image", source:{type:"base64", media_type:"image/jpeg", data:b64Current}}
+          ]
+        }]
+      })
+    });
+    const data = await response.json();
+    const text = (data.content || [])
+      .filter(c=>c.type==='text')
+      .map(c=>c.text)
+      .join('\n')
+      .trim() || 'Couldn\'t generate a summary this time — try again from the photo grid.';
+    state.photoSummaries[week] = { prevWeek, text, pending:false };
+  }catch(e){
+    console.error('progress summary failed', e);
+    state.photoSummaries[week] = { prevWeek, text:'Couldn\'t generate a summary — check your connection and try re-adding the photo.', pending:false };
+  }
+  await saveState();
+  renderSummaries();
+}
+
+function renderSummaries(){
+  const container = document.getElementById('summary-list');
+  if(!container) return;
+  const weeks = Object.keys(state.photoSummaries).map(Number).sort((a,b)=>b-a);
+  if(weeks.length === 0){
+    container.innerHTML = '<div class="empty-note">Add photos in at least two different weeks and you\'ll get an honest week-over-week comparison here.</div>';
+    return;
+  }
+  container.innerHTML = weeks.map(w=>{
+    const s = state.photoSummaries[w];
+    return `<div class="summary-card${s.pending ? ' pending' : ''}">
+      <div class="sum-head">WEEK ${s.prevWeek} → WEEK ${w}</div>
+      <p>${s.text}</p>
+    </div>`;
+  }).join('');
 }
 function populateCompareSelects(){
   const weeksWithPhotos = Object.keys(state.photos).map(Number).sort((a,b)=>a-b);

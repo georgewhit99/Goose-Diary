@@ -64,11 +64,10 @@
   .barbell{display:flex; align-items:center; gap:0; height:34px;}
   .sleeve{width:14px; height:8px; background:var(--rest); border-radius:2px 0 0 2px;}
   .sleeve.right{border-radius:0 2px 2px 0;}
-  .bar-track{flex:1; height:4px; background:var(--rest); position:relative;}
   .plates{flex:1; display:flex; justify-content:space-between; padding:0 2px;}
-  .plate{width:30px; height:30px; border-radius:50%; background:var(--surface-2); border:3px solid var(--rest); display:flex; align-items:center; justify-content:center; transition:all .25s ease;}
+  .plate{width:26px; height:26px; border-radius:50%; background:var(--surface-2); border:3px solid var(--rest); display:flex; align-items:center; justify-content:center; transition:all .25s ease;}
   .plate.filled{background:var(--accent-dim); border-color:var(--accent);}
-  .plate.filled::after{content:''; width:7px; height:7px; border-radius:50%; background:var(--accent);}
+  .plate.filled::after{content:''; width:6px; height:6px; border-radius:50%; background:var(--accent);}
 
   /* Tabs */
   .tabs{display:flex; gap:6px; margin:20px 20px 4px; background:var(--surface); padding:4px; border-radius:10px; border:1px solid var(--line);}
@@ -85,6 +84,7 @@
   .day-card:active{transform:scale(0.98);}
   .day-card.type-strength{border-left-color:var(--accent);}
   .day-card.type-run{border-left-color:var(--amber);}
+  .day-card.type-football{border-left-color:var(--amber);}
   .day-card.type-rest{opacity:0.6;}
   .day-card.complete{border-left-color:var(--good); background:linear-gradient(135deg, rgba(111,207,151,0.10), var(--surface));}
   .day-badge{width:44px; height:44px; border-radius:10px; background:var(--surface-2); display:flex; align-items:center; justify-content:center; font-size:20px; flex:0 0 auto;}
@@ -117,14 +117,31 @@
   .chart-card .latest{font-family:'JetBrains Mono',monospace; font-size:22px; color:var(--text); font-weight:600;}
   .chart-card .latest span{font-size:12px; color:var(--muted); font-weight:400; margin-left:4px;}
   .chart-box{height:130px; margin-top:8px;}
-  .empty-note{color:var(--muted); font-size:12.5px; text-align:center; padding:20px 0;}
+
+  /* Photos */
+  .photo-intro{padding:16px 20px 4px; color:var(--muted); font-size:13px; line-height:1.5;}
+  .photo-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:10px; padding:12px 20px 4px;}
+  .photo-slot{aspect-ratio:3/4; background:var(--surface); border:1px dashed var(--line); border-radius:10px; position:relative; overflow:hidden; display:flex; align-items:center; justify-content:center; cursor:pointer;}
+  .photo-slot img{width:100%; height:100%; object-fit:cover; display:block;}
+  .photo-slot .ps-label{position:absolute; top:6px; left:6px; background:rgba(0,0,0,0.55); color:#fff; font-size:10px; padding:2px 6px; border-radius:6px; font-family:'JetBrains Mono',monospace; z-index:2;}
+  .photo-slot .ps-plus{color:var(--muted); font-size:22px;}
+  .photo-slot .ps-del{position:absolute; top:5px; right:5px; width:20px; height:20px; border-radius:50%; background:rgba(0,0,0,0.6); color:#fff; font-size:12px; display:flex; align-items:center; justify-content:center; z-index:2;}
+  .photo-slot input[type=file]{display:none;}
+  .compare-card{background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); margin:16px 20px 24px; padding:16px;}
+  .compare-card h3{font-size:12px; color:var(--muted); letter-spacing:0.08em; margin:0 0 12px;}
+  .compare-selects{display:flex; gap:10px; margin-bottom:12px; align-items:center;}
+  .compare-selects select{flex:1; background:var(--surface-2); border:1px solid var(--line); color:var(--text); padding:8px; border-radius:8px; font-family:'JetBrains Mono',monospace; font-size:12.5px;}
+  .compare-arrow{color:var(--muted); font-size:14px;}
+  .compare-images{display:flex; gap:10px;}
+  .compare-img-box{flex:1; aspect-ratio:3/4; background:var(--surface-2); border-radius:10px; overflow:hidden; display:flex; align-items:center; justify-content:center; color:var(--muted); font-size:11.5px; text-align:center; padding:8px;}
+  .compare-img-box img{width:100%; height:100%; object-fit:cover;}
 
   /* Modal */
   .modal-backdrop{position:fixed; inset:0; background:rgba(8,8,10,0.72); backdrop-filter:blur(6px); display:flex; align-items:flex-end; z-index:50; opacity:0; pointer-events:none; transition:opacity .2s ease;}
   .modal-backdrop.open{opacity:1; pointer-events:auto;}
   .sheet{
     background:var(--surface); width:100%; max-width:560px; margin:0 auto; border-radius:20px 20px 0 0;
-    padding:8px 20px 28px; max-height:82vh; overflow-y:auto; transform:translateY(16px); transition:transform .22s ease;
+    padding:8px 20px 28px; max-height:86vh; overflow-y:auto; transform:translateY(16px); transition:transform .22s ease;
     border-top:1px solid var(--line);
   }
   .modal-backdrop.open .sheet{transform:translateY(0);}
@@ -133,25 +150,50 @@
   .sheet-head .s-eyebrow{font-size:11px; color:var(--accent); letter-spacing:0.1em; font-weight:600;}
   .sheet-head h2{font-size:22px; margin:2px 0 4px;}
   .sheet-head .s-note{color:var(--muted); font-size:13px; line-height:1.5; margin:0 0 16px;}
-  .ex-row{display:flex; align-items:center; gap:12px; padding:12px 0; border-top:1px solid var(--line);}
+
+  .pace-guide{background:var(--surface-2); border:1px solid var(--line); border-radius:10px; padding:12px 14px; margin-bottom:16px;}
+  .pace-guide .pg-title{font-size:11px; color:var(--amber); letter-spacing:0.08em; font-weight:700; margin-bottom:8px;}
+  .pace-guide table{width:100%; border-collapse:collapse; font-size:12.5px;}
+  .pace-guide td{padding:5px 0; border-top:1px solid var(--line);}
+  .pace-guide tr:first-child td{border-top:none;}
+  .pace-guide td:first-child{color:var(--muted);}
+  .pace-guide td:last-child{text-align:right; font-family:'JetBrains Mono',monospace; font-weight:600;}
+  .pace-guide .pg-foot{color:var(--muted); font-size:11.5px; margin-top:8px; line-height:1.5;}
+
+  .ex-row{padding:12px 0; border-top:1px solid var(--line);}
+  .ex-top{display:flex; align-items:center; gap:12px;}
   .ex-check{width:22px; height:22px; border-radius:6px; border:1.5px solid var(--rest); flex:0 0 auto; display:flex; align-items:center; justify-content:center; cursor:pointer; transition:all .15s;}
   .ex-check.checked{background:var(--good); border-color:var(--good); color:#0e1210; font-size:13px;}
   .ex-body{flex:1;}
   .ex-name{font-size:14.5px; font-weight:500;}
   .ex-name.checked{color:var(--muted); text-decoration:line-through;}
   .ex-meta{font-size:12px; color:var(--muted); font-family:'JetBrains Mono',monospace; margin-top:2px;}
+  .ex-controls{display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin:10px 0 0 34px;}
+  .ex-weight{display:flex; align-items:center; gap:4px; background:var(--surface-2); border:1px solid var(--line); border-radius:8px; padding:5px 9px;}
+  .ex-weight input{width:42px; background:transparent; border:none; color:var(--text); font-family:'JetBrains Mono',monospace; font-size:13px; outline:none;}
+  .ex-weight span{font-size:11px; color:var(--muted);}
+  .diff-group{display:flex; gap:4px;}
+  .diff-btn{padding:6px 9px; border-radius:7px; font-size:11px; font-weight:600; border:1px solid var(--line); background:var(--surface-2); color:var(--muted); cursor:pointer;}
+  .diff-btn.active-easy{background:rgba(111,207,151,0.18); border-color:var(--good); color:var(--good);}
+  .diff-btn.active-right{background:rgba(242,193,78,0.18); border-color:var(--amber); color:var(--amber);}
+  .diff-btn.active-hard{background:rgba(228,87,46,0.18); border-color:var(--accent); color:var(--accent);}
+  .ex-link-row{display:flex; gap:6px; margin:8px 0 0 34px; align-items:center;}
+  .ex-link-row input{flex:1; background:var(--surface-2); border:1px solid var(--line); border-radius:8px; padding:7px 9px; color:var(--text); font-size:12px; outline:none;}
+  .ex-link-row input:focus{border-color:var(--accent);}
+  .ex-link-row a.link-btn{flex:0 0 auto; width:30px; height:30px; border-radius:8px; background:var(--surface-2); border:1px solid var(--line); display:flex; align-items:center; justify-content:center; color:var(--accent); text-decoration:none; font-size:13px;}
+
   .sheet-actions{margin-top:18px; display:flex; gap:10px;}
   .btn-ghost{flex:1; padding:11px 0; background:transparent; border:1px solid var(--line); color:var(--muted); border-radius:8px; font-size:13px; font-weight:600; cursor:pointer;}
   .btn-complete{flex:2; padding:11px 0; background:var(--good); border:none; color:#0e1210; border-radius:8px; font-size:13px; font-weight:700; letter-spacing:0.04em; cursor:pointer; text-transform:uppercase;}
   .btn-complete.done{background:var(--surface-2); color:var(--good); border:1px solid var(--good);}
 
   /* toast */
-  .toast{position:fixed; bottom:96px; left:50%; transform:translateX(-50%) translateY(10px); background:var(--surface-2); border:1px solid var(--line); color:var(--text); padding:10px 18px; border-radius:20px; font-size:13px; opacity:0; pointer-events:none; transition:all .25s ease; z-index:60;}
+  .toast{position:fixed; bottom:96px; left:50%; transform:translateX(-50%) translateY(10px); background:var(--surface-2); border:1px solid var(--line); color:var(--text); padding:10px 18px; border-radius:20px; font-size:13px; opacity:0; pointer-events:none; transition:all .25s ease; z-index:60; max-width:80%; text-align:center;}
   .toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
 
   /* bottom nav */
   .bottom-nav{position:fixed; bottom:0; left:0; right:0; background:rgba(27,29,34,0.94); backdrop-filter:blur(14px); border-top:1px solid var(--line); padding:10px 0 calc(10px + env(safe-area-inset-bottom)); z-index:40;}
-  .bn-inner{max-width:560px; margin:0 auto; display:flex; justify-content:center; gap:34px;}
+  .bn-inner{max-width:560px; margin:0 auto; display:flex; justify-content:center; gap:30px;}
   .bn-item{display:flex; flex-direction:column; align-items:center; gap:3px; color:var(--muted); font-size:10px; letter-spacing:0.06em; cursor:pointer; font-weight:600;}
   .bn-item .bn-icon{font-size:19px;}
   .bn-item.active{color:var(--accent);}
@@ -166,7 +208,7 @@
   <div class="hero">
     <div class="hero-eyebrow">12-WEEK PROGRAM · LEAN &amp; STRONG</div>
     <h1>Training Plan</h1>
-    <p>Strength 4x/week, running &amp; football, built around broken sleep — consistency over heroics.</p>
+    <p>Strength 4x/week, football twice, one flexible run — built around broken sleep.</p>
   </div>
 
   <div class="week-rail" id="week-rail"></div>
@@ -174,7 +216,7 @@
   <div class="bar-progress">
     <div class="bp-head">
       <span>THIS WEEK'S LOAD</span>
-      <span class="bp-count" id="bp-count">0 / 5</span>
+      <span class="bp-count" id="bp-count">0 / 6</span>
     </div>
     <div class="barbell">
       <div class="sleeve"></div>
@@ -186,6 +228,7 @@
   <div class="tabs">
     <div class="tab active" data-tab="plan" onclick="switchTab('plan')">Plan</div>
     <div class="tab" data-tab="metrics" onclick="switchTab('metrics')">Metrics</div>
+    <div class="tab" data-tab="photos" onclick="switchTab('photos')">Photos</div>
   </div>
 
   <div id="plan-view" class="day-list"></div>
@@ -229,6 +272,23 @@
     </div>
   </div>
 
+  <div id="photos-view" style="display:none;">
+    <div class="photo-intro">Add one photo a week to actually see the change — the scale won't show it as clearly as this will. Tap a slot to add or replace a photo.</div>
+    <div class="photo-grid" id="photo-grid"></div>
+    <div class="compare-card">
+      <h3>COMPARE WEEKS</h3>
+      <div class="compare-selects">
+        <select id="compare-a" onchange="renderCompare()"></select>
+        <span class="compare-arrow">vs</span>
+        <select id="compare-b" onchange="renderCompare()"></select>
+      </div>
+      <div class="compare-images">
+        <div class="compare-img-box" id="compare-img-a">No photo yet</div>
+        <div class="compare-img-box" id="compare-img-b">No photo yet</div>
+      </div>
+    </div>
+  </div>
+
 </div>
 
 <div class="modal-backdrop" id="modal-backdrop" onclick="if(event.target===this) closeModal()">
@@ -239,6 +299,7 @@
       <h2 id="s-title">Workout</h2>
       <p class="s-note" id="s-note"></p>
     </div>
+    <div id="pace-guide-container"></div>
     <div id="ex-list"></div>
     <div class="sheet-actions">
       <button class="btn-ghost" onclick="closeModal()">Close</button>
@@ -253,6 +314,7 @@
   <div class="bn-inner">
     <div class="bn-item active" data-nav="plan" onclick="switchTab('plan')"><span class="bn-icon">🏋️</span>PLAN</div>
     <div class="bn-item" data-nav="metrics" onclick="switchTab('metrics')"><span class="bn-icon">📈</span>METRICS</div>
+    <div class="bn-item" data-nav="photos" onclick="switchTab('photos')"><span class="bn-icon">📸</span>PHOTOS</div>
   </div>
 </nav>
 
@@ -265,6 +327,15 @@ const abCircuits = [
   [ {n:'Hanging leg raises', m:'3 × max'}, {n:'Plank', m:'3 × 60s'}, {n:'Weighted DB sit-ups', m:'3 × 12' } ]
 ];
 function abCircuitFor(week){ return abCircuits[(week-1) % abCircuits.length]; }
+
+// Run pace guide, built off a 20:00 5k PB (4:00/km)
+const runPaces = [
+  {label:'Easy / recovery', pace:'5:10–5:20 /km'},
+  {label:'Steady', pace:'4:40–4:50 /km'},
+  {label:'Tempo effort', pace:'4:15–4:25 /km'},
+  {label:'5k race pace (your PB)', pace:'4:00 /km'},
+  {label:'Long, relaxed run', pace:'5:15–5:30 /km'}
+];
 
 function dayTemplates(week){
   const ab = abCircuitFor(week);
@@ -288,10 +359,10 @@ function dayTemplates(week){
         {n:'Standing calf raises', m:'3 × 15'},
         ...ab
       ]},
-    { key:'wed', label:'WED', type:'run', title:'Run + Finisher', icon:'🏃',
-      note:'Your scheduled run, then a short strength finisher while still warm.',
+    { key:'wed', label:'WED', type:'football', title:'Football + Finisher', icon:'⚽',
+      note:'Football training, then a short strength finisher while you\'re still warm.',
       exercises:[
-        {n:'Run — as scheduled', m:'—'},
+        {n:'Football — training/match', m:'—'},
         {n:'Pull-ups', m:'3 rounds × 10'},
         {n:'DB thrusters', m:'3 rounds × 10'}
       ]},
@@ -305,44 +376,52 @@ function dayTemplates(week){
         {n:'Overhead tricep extension', m:'3 × 12'},
         ...ab
       ]},
-    { key:'fri', label:'FRI', type:'run', title:'Run / Football + Core', icon:'⚽',
-      note:'Run or football as scheduled. Add 10–15 min of core work if you\'re fresh enough — skip it if not, the session still counts.',
+    { key:'fri', label:'FRI', type:'run', title:'Run + Core', icon:'🏃', runGuide:true,
+      note:'Your run for the week. Build distance gradually — you\'ve got the base for it. Add 10–15 min of core if you\'re fresh, skip it if not.',
       exercises:[
-        {n:'Run or football — as scheduled', m:'—'},
+        {n:'Run — pace guide below', m:'—'},
         ...ab
       ]},
-    { key:'sat', label:'SAT', type:'rest', title:'Rest / Optional Football', icon:'🛌',
-      note:'Active recovery only. A walk beats a hard session if sleep\'s been rough — listen to your body.',
+    { key:'sat', label:'SAT', type:'rest', title:'Rest', icon:'🛌',
+      note:'Full rest. With two football sessions and four lifts this week, this day matters — protect it.',
       exercises:[]},
-    { key:'sun', label:'SUN', type:'rest', title:'Rest', icon:'🛌',
-      note:'Full rest. Recovery is part of the program, not a day off from it.',
-      exercises:[]}
+    { key:'sun', label:'SUN', type:'football', title:'Football', icon:'⚽',
+      note:'Second football session — main game day. Treat it as training, not a bonus session.',
+      exercises:[
+        {n:'Football — match/training', m:'—'}
+      ]}
   ];
 }
 
 /* ---------- State ---------- */
 const TOTAL_WEEKS = 12;
-let state = { currentWeek:1, completedDays:{}, exerciseChecks:{}, metrics:[] };
+let state = { currentWeek:1, completedDays:{}, exerciseData:{}, metrics:[], photos:{} };
 let activeDayKey = null;
 let charts = {};
 
 async function loadState(){
   try{
-    const res = await window.storage.get('plan-state-v1');
+    const res = await window.storage.get('plan-state-v2');
     if(res && res.value){
       const parsed = JSON.parse(res.value);
       state = Object.assign(state, parsed);
+      state.exerciseData = parsed.exerciseData || {};
+      state.photos = parsed.photos || {};
     }
   }catch(e){ /* no saved state yet */ }
 }
 async function saveState(){
-  try{ await window.storage.set('plan-state-v1', JSON.stringify(state)); }
+  try{ await window.storage.set('plan-state-v2', JSON.stringify(state)); }
   catch(e){ console.error('save failed', e); }
 }
 
 function dayId(week, key){ return `${week}-${key}`; }
+function exData(checkId){
+  if(!state.exerciseData[checkId]) state.exerciseData[checkId] = { done:false, weight:'', difficulty:'', link:'' };
+  return state.exerciseData[checkId];
+}
 
-/* ---------- Rendering ---------- */
+/* ---------- Rendering: plan ---------- */
 function renderWeekRail(){
   const rail = document.getElementById('week-rail');
   rail.innerHTML = '';
@@ -355,7 +434,8 @@ function renderWeekRail(){
     pill.innerHTML = `<div class="wk-num">${String(w).padStart(2,'0')}</div><div class="wk-label">WK</div><div class="wk-dot"></div>`;
     rail.appendChild(pill);
   }
-  document.querySelectorAll('.week-pill.active').forEach(p=>p.scrollIntoView({inline:'center', block:'nearest'}));
+  const activePill = document.querySelector('.week-pill.active');
+  if(activePill) activePill.scrollIntoView({inline:'center', block:'nearest'});
 }
 
 function renderBarProgress(){
@@ -406,21 +486,55 @@ function openModal(d){
   document.getElementById('s-title').textContent = d.title;
   document.getElementById('s-note').textContent = d.note;
 
+  const paceContainer = document.getElementById('pace-guide-container');
+  if(d.runGuide){
+    paceContainer.innerHTML = `
+      <div class="pace-guide">
+        <div class="pg-title">RUN PACE GUIDE — BASED ON YOUR 20:00 5K PB</div>
+        <table>${runPaces.map(p=>`<tr><td>${p.label}</td><td>${p.pace}</td></tr>`).join('')}</table>
+        <div class="pg-foot">Most weeks: easy-to-steady effort, building distance since you can comfortably go further than 5k. Every few weeks, swap in a tempo effort or a fresh 5k attempt if legs feel good.</div>
+      </div>`;
+  } else {
+    paceContainer.innerHTML = '';
+  }
+
   const list = document.getElementById('ex-list');
   list.innerHTML = '';
   const id = dayId(state.currentWeek, d.key);
   d.exercises.forEach((ex, i)=>{
     const checkId = `${id}::${i}`;
-    const checked = !!state.exerciseChecks[checkId];
+    const ed = exData(checkId);
     const row = document.createElement('div');
     row.className = 'ex-row';
     row.innerHTML = `
-      <div class="ex-check ${checked?'checked':''}" data-check="${checkId}">${checked?'✓':''}</div>
-      <div class="ex-body">
-        <div class="ex-name ${checked?'checked':''}">${ex.n}</div>
-        <div class="ex-meta">${ex.m}</div>
+      <div class="ex-top">
+        <div class="ex-check ${ed.done?'checked':''}" data-check="${checkId}">${ed.done?'✓':''}</div>
+        <div class="ex-body">
+          <div class="ex-name ${ed.done?'checked':''}">${ex.n}</div>
+          <div class="ex-meta">${ex.m}</div>
+        </div>
+      </div>
+      <div class="ex-controls">
+        <div class="ex-weight">
+          <input type="number" step="0.5" placeholder="wt" value="${ed.weight}" data-weight="${checkId}">
+          <span>kg</span>
+        </div>
+        <div class="diff-group">
+          <div class="diff-btn ${ed.difficulty==='easy'?'active-easy':''}" data-diff="${checkId}" data-val="easy">Easy</div>
+          <div class="diff-btn ${ed.difficulty==='right'?'active-right':''}" data-diff="${checkId}" data-val="right">Right</div>
+          <div class="diff-btn ${ed.difficulty==='hard'?'active-hard':''}" data-diff="${checkId}" data-val="hard">Hard</div>
+        </div>
+      </div>
+      <div class="ex-link-row">
+        <input type="url" placeholder="Paste TikTok link for this exercise" value="${ed.link || ''}" data-link="${checkId}">
+        ${ed.link ? `<a class="link-btn" href="${ed.link}" target="_blank" rel="noopener">▶</a>` : ''}
       </div>`;
-    row.querySelector('.ex-check').onclick = ()=> toggleExercise(checkId);
+    row.querySelector('.ex-check').onclick = ()=> toggleExerciseDone(checkId);
+    row.querySelectorAll('.diff-btn').forEach(btn=>{
+      btn.onclick = ()=> setDifficulty(checkId, btn.dataset.val);
+    });
+    row.querySelector('[data-weight]').onchange = (e)=> setWeight(checkId, e.target.value);
+    row.querySelector('[data-link]').onchange = (e)=> setLink(checkId, e.target.value);
     list.appendChild(row);
   });
 
@@ -436,11 +550,32 @@ function closeModal(){
   document.getElementById('modal-backdrop').classList.remove('open');
   activeDayKey = null;
 }
-function toggleExercise(checkId){
-  state.exerciseChecks[checkId] = !state.exerciseChecks[checkId];
-  saveState();
+function refreshModal(){
   const d = dayTemplates(state.currentWeek).find(x=>x.key===activeDayKey);
-  openModal(d);
+  if(d) openModal(d);
+}
+function toggleExerciseDone(checkId){
+  const ed = exData(checkId);
+  ed.done = !ed.done;
+  saveState();
+  refreshModal();
+}
+function setDifficulty(checkId, val){
+  const ed = exData(checkId);
+  ed.difficulty = ed.difficulty === val ? '' : val;
+  saveState();
+  refreshModal();
+}
+function setWeight(checkId, val){
+  const ed = exData(checkId);
+  ed.weight = val;
+  saveState();
+}
+function setLink(checkId, val){
+  const ed = exData(checkId);
+  ed.link = val.trim();
+  saveState();
+  refreshModal();
 }
 function toggleDayComplete(){
   if(!activeDayKey) return;
@@ -448,8 +583,7 @@ function toggleDayComplete(){
   const wasComplete = !!state.completedDays[id];
   state.completedDays[id] = !wasComplete;
   saveState();
-  const d = dayTemplates(state.currentWeek).find(x=>x.key===activeDayKey);
-  openModal(d);
+  refreshModal();
   renderAll();
   showToast(wasComplete ? 'Marked incomplete' : 'Session logged 💪');
 }
@@ -460,9 +594,11 @@ function switchTab(tab){
   document.querySelectorAll('.bn-item').forEach(t=>t.classList.toggle('active', t.dataset.nav===tab));
   document.getElementById('plan-view').style.display = tab==='plan' ? 'flex' : 'none';
   document.getElementById('metrics-view').style.display = tab==='metrics' ? 'block' : 'none';
+  document.getElementById('photos-view').style.display = tab==='photos' ? 'block' : 'none';
   document.querySelector('.week-rail').style.display = tab==='plan' ? 'flex' : 'none';
   document.querySelector('.bar-progress').style.display = tab==='plan' ? 'block' : 'none';
   if(tab==='metrics') renderMetrics();
+  if(tab==='photos') renderPhotos();
 }
 
 /* ---------- Metrics ---------- */
@@ -496,7 +632,7 @@ function buildChart(canvasId, points, color, unit){
   charts[canvasId] = new Chart(ctx, {
     type:'line',
     data:{
-      labels: points.map((_,i)=> `W${points[i].week}`),
+      labels: points.map(p=> `W${p.week}`),
       datasets:[{
         data: points.map(p=>p.value),
         borderColor: color,
@@ -531,6 +667,87 @@ function renderMetrics(){
   buildChart('chart-weight', weightPts, '#E4572E', 'kg');
   buildChart('chart-waist', waistPts, '#F2C14E', 'cm');
   buildChart('chart-lift', liftPts, '#6FCF97', 'kg');
+}
+
+/* ---------- Photos ---------- */
+function renderPhotos(){
+  const grid = document.getElementById('photo-grid');
+  grid.innerHTML = '';
+  for(let w=1; w<=TOTAL_WEEKS; w++){
+    const slot = document.createElement('div');
+    slot.className = 'photo-slot';
+    const photo = state.photos[w];
+    if(photo){
+      slot.innerHTML = `<span class="ps-label">WK ${w}</span><span class="ps-del" data-del="${w}">✕</span><img src="${photo}" alt="Week ${w} progress photo">`;
+      slot.onclick = (e)=>{ if(e.target.dataset.del) return; triggerUpload(w); };
+      slot.querySelector('.ps-del').onclick = (e)=>{ e.stopPropagation(); deletePhoto(w); };
+    } else {
+      slot.innerHTML = `<span class="ps-label">WK ${w}</span><span class="ps-plus">+</span>`;
+      slot.onclick = ()=> triggerUpload(w);
+    }
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.capture = 'environment';
+    input.id = `file-input-${w}`;
+    input.onchange = (e)=> handlePhotoFile(w, e.target.files[0]);
+    slot.appendChild(input);
+    grid.appendChild(slot);
+  }
+  populateCompareSelects();
+  renderCompare();
+}
+function triggerUpload(week){
+  document.getElementById(`file-input-${week}`).click();
+}
+function handlePhotoFile(week, file){
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = (e)=>{
+    const img = new Image();
+    img.onload = ()=>{
+      const maxDim = 640;
+      let w = img.width, h = img.height;
+      if(w > h){ if(w > maxDim){ h = Math.round(h*maxDim/w); w = maxDim; } }
+      else { if(h > maxDim){ w = Math.round(w*maxDim/h); h = maxDim; } }
+      const canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img,0,0,w,h);
+      const dataUrl = canvas.toDataURL('image/jpeg',0.72);
+      state.photos[week] = dataUrl;
+      saveState();
+      renderPhotos();
+      showToast(`Photo saved for week ${week}`);
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+function deletePhoto(week){
+  delete state.photos[week];
+  saveState();
+  renderPhotos();
+  showToast(`Photo removed for week ${week}`);
+}
+function populateCompareSelects(){
+  const weeksWithPhotos = Object.keys(state.photos).map(Number).sort((a,b)=>a-b);
+  const selA = document.getElementById('compare-a');
+  const selB = document.getElementById('compare-b');
+  const buildOptions = ()=> Array.from({length:TOTAL_WEEKS}, (_,i)=>i+1)
+    .map(w=> `<option value="${w}">Week ${w}${state.photos[w] ? '' : ' (no photo)'}</option>`).join('');
+  const prevA = selA.value, prevB = selB.value;
+  selA.innerHTML = buildOptions();
+  selB.innerHTML = buildOptions();
+  if(prevA) selA.value = prevA; else if(weeksWithPhotos.length) selA.value = weeksWithPhotos[0];
+  if(prevB) selB.value = prevB; else if(weeksWithPhotos.length > 1) selB.value = weeksWithPhotos[weeksWithPhotos.length-1];
+}
+function renderCompare(){
+  const wA = document.getElementById('compare-a').value;
+  const wB = document.getElementById('compare-b').value;
+  const boxA = document.getElementById('compare-img-a');
+  const boxB = document.getElementById('compare-img-b');
+  boxA.innerHTML = state.photos[wA] ? `<img src="${state.photos[wA]}" alt="Week ${wA}">` : `No photo for week ${wA}`;
+  boxB.innerHTML = state.photos[wB] ? `<img src="${state.photos[wB]}" alt="Week ${wB}">` : `No photo for week ${wB}`;
 }
 
 /* ---------- Toast ---------- */

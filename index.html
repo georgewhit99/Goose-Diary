@@ -1,4 +1,4 @@
-test <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -325,8 +325,34 @@ test <!DOCTYPE html>
     <div class="bn-item active" data-nav="plan" onclick="switchTab('plan')"><span class="bn-icon">🏋️</span>PLAN</div>
     <div class="bn-item" data-nav="metrics" onclick="switchTab('metrics')"><span class="bn-icon">📈</span>METRICS</div>
     <div class="bn-item" data-nav="photos" onclick="switchTab('photos')"><span class="bn-icon">📸</span>PHOTOS</div>
+    <div class="bn-item" data-nav="data" onclick="openDataModal()"><span class="bn-icon">💾</span>DATA</div>
   </div>
 </nav>
+
+<div class="modal-backdrop" id="data-modal-backdrop" onclick="if(event.target===this) closeDataModal()">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-head">
+      <div class="s-eyebrow">YOUR DATA</div>
+      <h2>Saving &amp; Backup</h2>
+      <p class="s-note" id="sync-status">Everything you log — workouts, ratings, links, photos, metrics — saves automatically to this browser's storage on this device. It'll be there when you refresh or come back tomorrow, as long as you use the same browser and don't clear its data. Switching browsers or devices? Export a backup below and import it there.</p>
+    </div>
+    <div class="metric-form" style="margin-bottom:12px;">
+      <h3>DOWNLOAD A BACKUP</h3>
+      <p style="font-size:12.5px; color:var(--muted); line-height:1.5; margin:0 0 12px;">Save a copy of everything as a file, in case you want it outside your account.</p>
+      <button class="btn-primary" onclick="exportData()">Export backup (.json)</button>
+    </div>
+    <div class="metric-form" style="margin-bottom:12px;">
+      <h3>RESTORE A BACKUP</h3>
+      <p style="font-size:12.5px; color:var(--muted); line-height:1.5; margin:0 0 12px;">This replaces everything currently saved.</p>
+      <input type="file" id="import-file-input" accept="application/json" style="display:none;" onchange="importData(event)">
+      <button class="btn-ghost" style="width:100%;" onclick="document.getElementById('import-file-input').click()">Choose backup file…</button>
+    </div>
+    <div class="sheet-actions">
+      <button class="btn-ghost" onclick="closeDataModal()">Close</button>
+    </div>
+  </div>
+</div>
 
 <script>
 /* ---------- Plan data ---------- */
@@ -417,22 +443,28 @@ let state = { currentWeek:1, completedDays:{}, exerciseData:{}, exerciseLinks:{}
 let activeDayKey = null;
 let charts = {};
 
-async function loadState(){
+const STORAGE_KEY = 'training-plan-state-v3';
+
+function loadState(){
   try{
-    const res = await window.storage.get('plan-state-v3');
-    if(res && res.value){
-      const parsed = JSON.parse(res.value);
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(raw){
+      const parsed = JSON.parse(raw);
       state = Object.assign(state, parsed);
       state.exerciseData = parsed.exerciseData || {};
       state.exerciseLinks = parsed.exerciseLinks || {};
       state.photos = parsed.photos || {};
       state.photoSummaries = parsed.photoSummaries || {};
     }
-  }catch(e){ /* no saved state yet */ }
+  }catch(e){ console.error('load failed', e); }
 }
-async function saveState(){
-  try{ await window.storage.set('plan-state-v3', JSON.stringify(state)); }
-  catch(e){ console.error('save failed', e); }
+function saveState(){
+  try{
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  }catch(e){
+    console.error('save failed', e);
+    showToast('Storage full or unavailable — try exporting a backup');
+  }
 }
 
 function dayId(week, key){ return `${week}-${key}`; }
@@ -831,6 +863,62 @@ function renderCompare(){
   const boxB = document.getElementById('compare-img-b');
   boxA.innerHTML = state.photos[wA] ? `<img src="${state.photos[wA]}" alt="Week ${wA}">` : `No photo for week ${wA}`;
   boxB.innerHTML = state.photos[wB] ? `<img src="${state.photos[wB]}" alt="Week ${wB}">` : `No photo for week ${wB}`;
+}
+
+/* ---------- Data modal / backup ---------- */
+function openDataModal(){
+  document.getElementById('data-modal-backdrop').classList.add('open');
+}
+function closeDataModal(){
+  document.getElementById('data-modal-backdrop').classList.remove('open');
+}
+function exportData(){
+  try{
+    const blob = new Blob([JSON.stringify(state, null, 2)], {type:'application/json'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    const dateStr = new Date().toISOString().slice(0,10);
+    a.href = url;
+    a.download = `training-plan-backup-${dateStr}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    showToast('Backup downloaded');
+  }catch(e){
+    console.error('export failed', e);
+    showToast('Export failed — try again');
+  }
+}
+function importData(event){
+  const file = event.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = (e)=>{
+    try{
+      const parsed = JSON.parse(e.target.result);
+      state = {
+        currentWeek: parsed.currentWeek || 1,
+        completedDays: parsed.completedDays || {},
+        exerciseData: parsed.exerciseData || {},
+        exerciseLinks: parsed.exerciseLinks || {},
+        metrics: parsed.metrics || [],
+        photos: parsed.photos || {},
+        photoSummaries: parsed.photoSummaries || {}
+      };
+      saveState();
+      renderAll();
+      renderMetrics();
+      renderPhotos();
+      closeDataModal();
+      showToast('Backup restored');
+    }catch(err){
+      console.error('import failed', err);
+      showToast('That file couldn\'t be read — check it\'s a valid backup');
+    }
+  };
+  reader.readAsText(file);
+  event.target.value = '';
 }
 
 /* ---------- Toast ---------- */
